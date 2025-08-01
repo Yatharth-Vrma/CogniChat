@@ -50,23 +50,11 @@ export default function AccountDropdown1() {
       >
         <img
           src="https://cdn.tailgrids.com/assets/images/core-components/account-dropdowns/image-1.jpg"
-          alt="account"
+          alt="Profile"
           className="profile-avatar"
         />
-        <span className="profile-trigger-label">Account</span>
-        <svg
-          width="20"
-          height="20"
-          viewBox="0 0 20 20"
-          fill="none"
-          className={`profile-chevron ${dropdownOpen ? "open" : ""}`}
-        >
-          <path
-            d="M10 14.25C9.8125 14.25 9.65625 14.1875 9.5 14.0625L2.3125 7C2.03125 6.71875 2.03125 6.28125 2.3125 6C2.59375 5.71875 3.03125 5.71875 3.3125 6L10 12.5312L16.6875 5.9375C16.9688 5.65625 17.4062 5.65625 17.6875 5.9375C17.9688 6.21875 17.9688 6.65625 17.6875 6.9375L10.5 14C10.3437 14.1562 10.1875 14.25 10 14.25Z"
-            fill="currentColor"
-          />
-        </svg>
       </button>
+      
       <div
         ref={dropdown}
         className={`profile-dropdown-menu ${dropdownOpen ? "show" : ""}`}
@@ -75,21 +63,24 @@ export default function AccountDropdown1() {
         <div className="profile-info">
           <img
             src="https://cdn.tailgrids.com/assets/images/core-components/account-dropdowns/image-1.jpg"
-            alt="account"
+            alt="Profile"
             className="profile-avatar-large"
           />
-          <div>
+          <div className="profile-details">
             <p className="profile-name">{user?.user_metadata?.full_name || 'User'}</p>
             <p className="profile-email">{user?.email || 'user@example.com'}</p>
           </div>
         </div>
-        <div className="profile-dropdown-links">
-          <a href="#profile">View profile</a>
-          <a href="#settings">Settings</a>
-        </div>
-        <div>
+        
+        <div className="profile-actions">
+          <button className="profile-action-btn">
+            View Profile
+          </button>
+          <button className="profile-action-btn">
+            Settings
+          </button>
           <button className="profile-logout" onClick={handleLogout}>
-            Log out
+            Logout
           </button>
         </div>
       </div>
