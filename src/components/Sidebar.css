@@ -1,0 +1,74 @@
+/* ISOLATED SIDEBAR STYLES - NO INTERFERENCE WITH SPLASH */
+.sidebar {
+  background-color: #000;
+  color: #ffffff;
+  border-right: 1px solid #9C9C9C;
+  transition: width 0.3s ease;
+  height: 100%; /* Changed from 100vh to 100% */
+  overflow-y: auto;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  flex-shrink: 0; /* Prevent sidebar from shrinking */
+}
+
+/* Scope all styles to sidebar only */
+.sidebar * {
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.sidebar.open {
+  width: 250px;
+}
+
+.sidebar.closed {
+  width: 50px;
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  padding: 15px;
+  border-bottom: 1px solid #9C9C9C;
+}
+
+.sidebar-header h3 {
+  margin-left: 10px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.toggle-btn {
+  background: none;
+  border: none;
+  color: #ffffff;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 5px;
+}
+
+.toggle-btn:hover {
+  color: #9C9C9C;
+}
+
+.chat-history {
+  padding: 10px;
+}
+
+.chat-item {
+  padding: 10px;
+  margin: 5px 0;
+  border-radius: 5px;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chat-item:hover {
+  background-color: #9C9C9C;
+  color: #000;
+}
+
+.chat-item.active {
+  background-color: #ffffff;
+  color: #000;
+}

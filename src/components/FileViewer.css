@@ -1,0 +1,134 @@
+/* ISOLATED FILE VIEWER STYLES - NO INTERFERENCE WITH SPLASH */
+.file-header-tabs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 20px;
+  height: 44px;
+  border-bottom: 1.5px solid #444;
+  background: #191919;
+  position: relative;
+  z-index: 2;
+}
+.file-tab {
+  background: #232323;
+  color: #fff;
+  border: none;
+  outline: none;
+  padding: 8px 18px;
+  border-radius: 6px 6px 0 0;
+  font-size: 1em;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  margin-right: 2px;
+}
+.file-tab.active {
+  background: #191919;
+  color: #ec4899;
+  border-bottom: 2.5px solid #ec4899;
+  font-weight: 600;
+}
+.add-tab-btn {
+  background: #232323;
+  color: #fff;
+  border: none;
+  outline: none;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 1.2em;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  cursor: pointer;
+  margin-left: 4px;
+  transition: background 0.2s, color 0.2s;
+}
+.add-tab-btn:hover {
+  background: #ec4899;
+  color: #fff;
+}
+.file-viewer {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Scope all styles to file viewer only */
+.file-viewer * {
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.upload-section {
+  margin-bottom: 20px;
+}
+
+.upload-btn {
+  display: inline-block;
+  padding: 10px 15px;
+  background-color: #9C9C9C;
+  color: #000;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.upload-btn:hover {
+  background-color: #ffffff;
+}
+
+.file-content {
+  flex: 1;
+  border: 1px solid #9C9C9C;
+  border-radius: 5px;
+  padding: 15px;
+  background-color: rgba(156, 156, 156, 0.1);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
+  /* Add these for perfect centering */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.file-content h3 {
+  margin-bottom: 10px;
+  color: #ffffff;
+}
+
+.file-content pre {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  color: #ffffff;
+}
+
+.file-content p {
+  color: #9C9C9C;
+  text-align: center;
+  margin-top: 50px;
+}
+.file-preview-area {
+  width: 100%;
+  background: #181818;
+  border-radius: 5px;
+  box-shadow: 0 2px 8px #0002;
+  overflow: hidden;
+}
+
+.file-bar {
+  background: #232323;
+  color: #fff;
+  padding: 10px 20px;
+  font-family: 'Fira Mono', 'Consolas', monospace;
+  font-size: 1em;
+  border-bottom: 1px solid #444;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.file-body {
+  padding: 20px;
+  color: #fff;
+  min-height: 150px;
+}

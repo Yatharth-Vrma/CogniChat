@@ -1,0 +1,120 @@
+/* ISOLATED CHAT STYLES - NO INTERFERENCE WITH SPLASH */
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Scope all styles to chat container only */
+.chat-container * {
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.chat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  border-bottom: 1px solid #9C9C9C;
+}
+
+.chat-header h3 {
+  color: #ffffff;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.new-chat-btn {
+  background-color: #9C9C9C;
+  color: #000;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.new-chat-btn:hover {
+  background-color: #ffffff;
+}
+
+.messages-container {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.message {
+  display: flex;
+  margin-bottom: 15px;
+}
+
+.message-content {
+  max-width: 70%;
+  padding: 10px 15px;
+  border-radius: 18px;
+}
+
+.message.user {
+  justify-content: flex-end;
+}
+
+.message.user .message-content {
+  background-color: #9C9C9C;
+  color: #000;
+}
+
+.message.ai {
+  justify-content: flex-start;
+}
+
+.message.ai .message-content {
+  background-color: #333;
+  color: #ffffff;
+}
+
+.timestamp {
+  display: block;
+  font-size: 0.7em;
+  margin-top: 5px;
+  opacity: 0.7;
+  text-align: right;
+}
+
+.empty-chat {
+  text-align: center;
+  margin-top: 50px;
+  color: #9C9C9C;
+}
+
+.message-form {
+  display: flex;
+  padding: 15px;
+  border-top: 1px solid #9C9C9C;
+}
+
+.message-form input {
+  flex: 1;
+  padding: 10px 15px;
+  border: 1px solid #9C9C9C;
+  border-radius: 20px;
+  background-color: #000;
+  color: #ffffff;
+  outline: none;
+}
+
+.message-form button {
+  margin-left: 10px;
+  padding: 10px 20px;
+  background-color: #9C9C9C;
+  color: #000;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.message-form button:hover {
+  background-color: #ffffff;
+}
