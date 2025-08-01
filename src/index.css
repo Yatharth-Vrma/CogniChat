@@ -8,6 +8,7 @@
   --primary-foreground: 255 255 255; /* white */
   --foreground: 249 250 251; /* #f9fafb in RGB */
   --background: 0 0 0; /* black */
+  --muted: 39 39 42; /* dark gray */
   --muted-foreground: 115 115 115; /* gray */
   --accent: 39 39 42; /* dark gray */
   --accent-foreground: 249 250 251; /* light */
@@ -37,6 +38,7 @@
 .light {
   --background: 255 255 255; /* white */
   --foreground: 0 0 0; /* black */
+  --muted: 244 244 245; /* light gray */
   --muted-foreground: 64 64 64; /* darker gray */
   --accent: 244 244 245; /* light gray */
   --accent-foreground: 0 0 0; /* black */
@@ -50,6 +52,7 @@
 .dark {
   --background: 0 0 0; /* black */
   --foreground: 249 250 251; /* light */
+  --muted: 39 39 42; /* dark gray */
   --muted-foreground: 115 115 115; /* gray */
   --accent: 39 39 42; /* dark gray */
   --accent-foreground: 249 250 251; /* light */
