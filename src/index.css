@@ -4,7 +4,7 @@
 
 /* Define CSS custom properties for Tailwind colors */
 :root {
-  --primary: 236 72 153; /* #ec4899 in RGB */
+  --primary: 149 120 65; /* rgb(149, 120, 65) */
   --primary-foreground: 255 255 255; /* white */
   --foreground: 249 250 251; /* #f9fafb in RGB */
   --background: 0 0 0; /* black */
