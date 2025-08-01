@@ -1,16 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import './FileViewer.css';
 import DragDropUploader from './DragDropUploader';
-import { Document, Page, pdfjs } from 'react-pdf';
-
-pdfjs.GlobalWorkerOptions.workerSrc = `${process.env.PUBLIC_URL}/pdf.worker.min.js`;
 
 const FileViewer = ({ onFileUpload, file }) => {
   const [fileContent, setFileContent] = useState('');
-  const [numPages, setNumPages] = useState(null);
   const [tabs, setTabs] = useState([]);
   const [activeTabId, setActiveTabId] = useState(null);
 
+  // Add file to tabs when a new file is uploaded
   useEffect(() => {
     if (file && !tabs.find(tab => tab.file.name === file.name)) {
       const newTab = {
@@ -23,6 +20,7 @@ const FileViewer = ({ onFileUpload, file }) => {
     }
   }, [file, tabs]);
 
+  // Update file content when active tab changes
   useEffect(() => {
     const activeTab = tabs.find(tab => tab.id === activeTabId);
     if (activeTab) {
@@ -37,20 +35,38 @@ const FileViewer = ({ onFileUpload, file }) => {
     }
   }, [activeTabId, tabs]);
 
-  const handlePdfLoad = ({ numPages }) => setNumPages(numPages);
-
+  // Add new tab function - this was missing!
   const addNewTab = () => {
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
+    fileInput.accept = '.pdf,.txt,.js,.json,.csv,.md,.html,.css';
+    fileInput.multiple = false; // Set to true if you want multiple file selection
     fileInput.onchange = (e) => {
       const selectedFile = e.target.files[0];
       if (selectedFile) {
-        onFileUpload(selectedFile);
+        // Check if file already exists
+        const existingTab = tabs.find(tab => tab.file.name === selectedFile.name);
+        if (existingTab) {
+          // Switch to existing tab
+          setActiveTabId(existingTab.id);
+        } else {
+          // Add new tab
+          const newTab = {
+            id: Date.now(),
+            file: selectedFile,
+            name: selectedFile.name
+          };
+          setTabs(prevTabs => [...prevTabs, newTab]);
+          setActiveTabId(newTab.id);
+          // Also call the parent's onFileUpload
+          onFileUpload(selectedFile);
+        }
       }
     };
     fileInput.click();
   };
 
+  // Close tab function
   const closeTab = (tabId, e) => {
     e.stopPropagation();
     const newTabs = tabs.filter(tab => tab.id !== tabId);
@@ -58,13 +74,26 @@ const FileViewer = ({ onFileUpload, file }) => {
     
     if (activeTabId === tabId) {
       if (newTabs.length > 0) {
-        setActiveTabId(newTabs[0].id);
+        // Switch to the previous tab or first available
+        const currentIndex = tabs.findIndex(tab => tab.id === tabId);
+        const nextIndex = currentIndex > 0 ? currentIndex - 1 : 0;
+        setActiveTabId(newTabs[nextIndex]?.id || null);
       } else {
         setActiveTabId(null);
       }
     }
   };
 
+  // Switch tab function
+  const switchTab = (tabId) => {
+    setActiveTabId(tabId);
+    const tab = tabs.find(t => t.id === tabId);
+    if (tab) {
+      onFileUpload(tab.file); // Update parent component
+    }
+  };
+
+  // Get file icon based on extension
   const getFileIcon = (fileName) => {
     const extension = fileName.split('.').pop().toLowerCase();
     switch (extension) {
@@ -73,6 +102,9 @@ const FileViewer = ({ onFileUpload, file }) => {
       case 'js': return '📜';
       case 'json': return '🔧';
       case 'csv': return '📊';
+      case 'md': return '📓';
+      case 'html': return '🌐';
+      case 'css': return '🎨';
       default: return '📄';
     }
   };
@@ -84,17 +116,23 @@ const FileViewer = ({ onFileUpload, file }) => {
     (currentFile.type === "application/pdf" ||
       (currentFile.name && currentFile.name.toLowerCase().endsWith(".pdf")));
 
+  // Create object URL for PDF
+  const pdfUrl = isPdf ? URL.createObjectURL(currentFile) : null;
+
   return (
     <div className="file-viewer">
+      {/* Tab Header */}
       <div className="file-header-tabs">
         {tabs.map(tab => (
           <div
             key={tab.id}
             className={`file-tab ${activeTabId === tab.id ? 'active' : ''}`}
-            onClick={() => setActiveTabId(tab.id)}
+            onClick={() => switchTab(tab.id)}
           >
             <span className="file-icon">{getFileIcon(tab.name)}</span>
-            <span className="file-name">{tab.name}</span>
+            <span className="file-name" title={tab.name}>
+              {tab.name.length > 15 ? `${tab.name.substring(0, 15)}...` : tab.name}
+            </span>
             <button 
               className="close-tab-btn" 
               onClick={(e) => closeTab(tab.id, e)}
@@ -104,39 +142,79 @@ const FileViewer = ({ onFileUpload, file }) => {
             </button>
           </div>
         ))}
-        <button className="add-tab-btn" onClick={addNewTab} title="Add Tab">
+        <button 
+          className="add-tab-btn" 
+          onClick={addNewTab} 
+          title="Add new file"
+        >
           +
         </button>
       </div>
+      
+      {/* File Content Area */}
       <div className="file-content">
-        {tabs.length === 0 && <DragDropUploader onFileUpload={onFileUpload} />}
-        {currentFile && (
-          <div className="file-preview-area">
-            <div className="file-bar">
-              <span className="file-type">{currentFile.name}</span>
+        {tabs.length === 0 ? (
+          <DragDropUploader onFileUpload={onFileUpload} />
+        ) : (
+          currentFile && (
+            <div className="file-preview-area">
+              {/* File Info Bar */}
+              
+              {/* File Body */}
+              <div className="file-body">
+                {currentFile.type === "text/plain" ? (
+                  <pre className="text-content">{fileContent}</pre>
+                ) : isPdf ? (
+                  <div className="pdf-container">
+                    <div className="pdf-viewer-notice">
+                      
+                      {/* Quick Actions */}
+                      <div className="pdf-quick-actions">
+                        <button 
+                          onClick={() => window.open(pdfUrl, '_blank')}
+                          className="pdf-action-btn primary"
+                        >
+                          🔍 View Full Screen
+                        </button>
+                      </div>
+                      
+                      {/* Embedded PDF Viewer */}
+                      <div className="pdf-embed-container">
+                        <iframe
+                          src={`${pdfUrl}#toolbar=1&navpanes=1&scrollbar=1&view=FitH`}
+                          width="100%"
+                          height="600px"
+                          title={`PDF Viewer - ${currentFile.name}`}
+                          className="pdf-iframe"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="unsupported-file">
+                    <div className="file-icon-large">{getFileIcon(currentFile.name)}</div>
+                    <h3>{currentFile.name}</h3>
+                    <p>Preview not available for this file type</p>
+                    <p><strong>Type:</strong> {currentFile.type || 'Unknown'}</p>
+                    <p><strong>Size:</strong> {(currentFile.size / 1024 / 1024).toFixed(2)} MB</p>
+                    <button 
+                      onClick={() => {
+                        const url = URL.createObjectURL(currentFile);
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = currentFile.name;
+                        link.click();
+                        URL.revokeObjectURL(url);
+                      }}
+                      className="download-btn"
+                    >
+                      📥 Download File
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="file-body">
-              {currentFile.type === "text/plain" ? (
-                <pre>{fileContent}</pre>
-              ) : isPdf ? (
-                <Document
-                  file={currentFile}
-                  onLoadSuccess={handlePdfLoad}
-                  loading={<p>Loading PDF...</p>}
-                  error={<p>Failed to load PDF.</p>}
-                >
-                  <Page pageNumber={1} />
-                  {numPages > 1 && (
-                    <p style={{ color: "#9C9C9C", marginTop: "10px" }}>
-                      PDF has {numPages} pages. Only first page is shown.
-                    </p>
-                  )}
-                </Document>
-              ) : (
-                <p>Preview not available for this file type. Download or open externally.</p>
-              )}
-            </div>
-          </div>
+          )
         )}
       </div>
     </div>
