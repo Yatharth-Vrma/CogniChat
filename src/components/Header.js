@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChevronsUpDown, Bell, User } from 'lucide-react';
+import { ChevronsUpDown, Bell } from 'lucide-react';
 import ThemeToggleButton from './ui/theme-toggle-button';
 import AccountDropdown1 from "./ui/AccountDropdown1"; // Adjust path if needed
 

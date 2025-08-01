@@ -17,8 +17,18 @@ const Chat = ({ activeChat, chatHistory, setChatHistory, addToChatHistory, file 
   };
 
   const handleSendMessage = (e) => {
+    // CRITICAL FIX: Prevent form submission and page refresh
     e.preventDefault();
+    e.stopPropagation();
+    
     if (!message.trim()) return;
+
+    // Check if we have an active chat, if not create one
+    let targetChatId = activeChat;
+    if (!targetChatId && chatHistory.length === 0) {
+      addToChatHistory('New Chat');
+      targetChatId = Date.now(); // This should match the ID from addToChatHistory
+    }
 
     const newMessage = {
       id: Date.now(),
@@ -27,31 +37,32 @@ const Chat = ({ activeChat, chatHistory, setChatHistory, addToChatHistory, file 
       timestamp: new Date().toLocaleTimeString()
     };
 
-    const updatedHistory = chatHistory.map(chat => {
-      if (chat.id === activeChat) {
-        return {
-          ...chat,
-          messages: [...chat.messages, newMessage]
-        };
-      }
-      return chat;
+    setChatHistory(prevHistory => {
+      return prevHistory.map(chat => {
+        if (chat.id === (targetChatId || activeChat)) {
+          return {
+            ...chat,
+            messages: [...chat.messages, newMessage]
+          };
+        }
+        return chat;
+      });
     });
 
-    setChatHistory(updatedHistory);
-    setMessage('');
+    setMessage(''); // Clear input immediately
 
     // Simulate AI response
     setTimeout(() => {
       const aiResponse = {
         id: Date.now() + 1,
-        text: `I received your message about "${message}". This is a simulated response.`,
+        text: `I received your message about "${newMessage.text}". This is a simulated response.`,
         sender: 'ai',
         timestamp: new Date().toLocaleTimeString()
       };
 
       setChatHistory(prevHistory => 
         prevHistory.map(chat => {
-          if (chat.id === activeChat) {
+          if (chat.id === (targetChatId || activeChat)) {
             return {
               ...chat,
               messages: [...chat.messages, aiResponse]
@@ -71,7 +82,11 @@ const Chat = ({ activeChat, chatHistory, setChatHistory, addToChatHistory, file 
     <div className="chat-container">
       <div className="chat-header">
         <h3>{currentChat?.title || 'Start a new chat'}</h3>
-        <button onClick={startNewChat} className="new-chat-btn">
+        <button 
+          type="button"  // Explicitly set button type
+          onClick={startNewChat} 
+          className="new-chat-btn"
+        >
           New Chat
         </button>
       </div>
@@ -100,8 +115,14 @@ const Chat = ({ activeChat, chatHistory, setChatHistory, addToChatHistory, file 
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           placeholder="Type your message here..."
+          autoComplete="off" // Prevent browser autocomplete
         />
-        <button type="submit">Send</button>
+        <button 
+          type="submit"
+          disabled={!message.trim()} // Disable if no message
+        >
+          Send
+        </button>
       </form>
     </div>
   );

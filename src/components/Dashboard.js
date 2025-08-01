@@ -12,6 +12,7 @@ function Dashboard() {
   const [chatHistory, setChatHistory] = useState([]);
   const [activeFile, setActiveFile] = useState(null);
   const [activeChat, setActiveChat] = useState(null);
+  
 
   // Initialize default chat when component mounts
   useEffect(() => {
@@ -26,19 +27,22 @@ function Dashboard() {
     }
   }, [chatHistory.length]);
 
+  
+
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
   };
 
-  const addToChatHistory = (title) => {
-    const newChat = {
-      id: Date.now(),
-      title: title || `Chat ${chatHistory.length + 1}`,
-      messages: []
-    };
-    setChatHistory([newChat, ...chatHistory]);
-    setActiveChat(newChat.id);
+const addToChatHistory = (title) => {
+  const newChat = {
+    id: Date.now(),
+    title: title || `Chat ${chatHistory.length + 1}`,
+    messages: []
   };
+  setChatHistory(prevHistory => [newChat, ...prevHistory]);
+  setActiveChat(newChat.id);
+  return newChat.id; // Return the ID for reference
+};
 
   const handleFileUpload = (file) => {
     setActiveFile(file);
