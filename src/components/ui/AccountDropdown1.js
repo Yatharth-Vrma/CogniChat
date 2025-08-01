@@ -1,10 +1,14 @@
 import React, { useEffect, useRef, useState } from "react";
-import "./AccountDropdown1.css"; // Create this for custom styles
+import "./AccountDropdown1.css";
+import { useAuth } from "../../contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 export default function AccountDropdown1() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const trigger = useRef(null);
   const dropdown = useRef(null);
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const clickHandler = ({ target }) => {
@@ -29,6 +33,11 @@ export default function AccountDropdown1() {
     document.addEventListener("keydown", keyHandler);
     return () => document.removeEventListener("keydown", keyHandler);
   });
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate('/login');
+  };
 
   return (
     <div className="profile-dropdown-container">
@@ -70,17 +79,18 @@ export default function AccountDropdown1() {
             className="profile-avatar-large"
           />
           <div>
-            <p className="profile-name">Andrio Miller</p>
-            <p className="profile-email">miller@company.com</p>
+            <p className="profile-name">{user?.user_metadata?.full_name || 'User'}</p>
+            <p className="profile-email">{user?.email || 'user@example.com'}</p>
           </div>
         </div>
         <div className="profile-dropdown-links">
           <a href="#profile">View profile</a>
           <a href="#settings">Settings</a>
-
         </div>
         <div>
-          <button className="profile-logout">Log out</button>
+          <button className="profile-logout" onClick={handleLogout}>
+            Log out
+          </button>
         </div>
       </div>
     </div>

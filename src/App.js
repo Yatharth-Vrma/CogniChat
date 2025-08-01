@@ -1,103 +1,34 @@
-import React, { useState } from 'react';
-import './App.css';
-import Header from './components/Header';
-import Sidebar from './components/Sidebar';
-import FileViewer from './components/FileViewer';
-import Chat from './components/Chat';
-import TextRevealLetters from './components/ui/TextRevealLetters';
+// filepath: /Users/divya/Documents/CogniChat/src/App.js
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './contexts/AuthContext';
+import ProtectedRoute from './components/auth/ProtectedRoute';
+import Login from './components/auth/Login';
+import Signup from './components/auth/Signup';
+import Dashboard from './components/Dashboard';
 import { ThemeProvider } from './components/ui/theme-provider';
+import './App.css';
 
 function App() {
-  const [showSplash, setShowSplash] = useState(true);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [chatHistory, setChatHistory] = useState([]);
-  const [activeFile, setActiveFile] = useState(null);
-  const [activeChat, setActiveChat] = useState(null);
-
-  const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
-  };
-
-  const addToChatHistory = (title) => {
-    const newChat = {
-      id: Date.now(),
-      title: title || `Chat ${chatHistory.length + 1}`,
-      messages: []
-    };
-    setChatHistory([newChat, ...chatHistory]);
-    setActiveChat(newChat.id);
-  };
-
-  const handleFileUpload = (file) => {
-    setActiveFile(file);
-    
-    // Check if there's an existing chat without messages
-    const emptyChat = chatHistory.find(chat => chat.messages.length === 0);
-    
-    if (emptyChat) {
-      // Update the existing empty chat with the file name
-      const updatedHistory = chatHistory.map(chat => 
-        chat.id === emptyChat.id 
-          ? { ...chat, title: `Chat about ${file.name}` }
-          : chat
-      );
-      setChatHistory(updatedHistory);
-      setActiveChat(emptyChat.id);
-    } else {
-      // Create new chat only if no empty chat exists
-      addToChatHistory(`Chat about ${file.name}`);
-    }
-  };
-
-  const updateChatTitle = (chatId, newTitle) => {
-    setChatHistory(prevHistory => 
-      prevHistory.map(chat => 
-        chat.id === chatId 
-          ? { ...chat, title: newTitle }
-          : chat
-      )
-    );
-  };
-
-  if (showSplash) {
-    return (
-      <ThemeProvider defaultTheme="dark" storageKey="mvpblocks-theme">
-        <TextRevealLetters onFinish={() => setShowSplash(false)} />
-      </ThemeProvider>
-    );
-  }
-
   return (
-    <ThemeProvider defaultTheme="dark" storageKey="mvpblocks-theme">
-      <div className="app">
-        <div className="app-header">
-          <Header />
-        </div>
-        <div className="main-row">
-          <Sidebar 
-            isOpen={sidebarOpen} 
-            toggleSidebar={toggleSidebar} 
-            chatHistory={chatHistory}
-            setActiveChat={setActiveChat}
-            activeChat={activeChat}
-            updateChatTitle={updateChatTitle}
-          />
-          <div className="main-content">
-            <div className="file-section">
-              <FileViewer onFileUpload={handleFileUpload} file={activeFile} />
-            </div>
-            <div className="chat-section">
-              <Chat 
-                activeChat={activeChat} 
-                chatHistory={chatHistory} 
-                setChatHistory={setChatHistory}
-                addToChatHistory={addToChatHistory}
-                file={activeFile}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
+    <ThemeProvider defaultTheme="dark" storageKey="cognifichat-theme">
+      <AuthProvider>
+        <Router>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route 
+              path="/dashboard" 
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route path="/" element={<Navigate to="/dashboard" />} />
+          </Routes>
+        </Router>
+      </AuthProvider>
     </ThemeProvider>
   );
 }
