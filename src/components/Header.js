@@ -1,6 +1,9 @@
 import React from 'react';
 import { ChevronsUpDown, Bell, User } from 'lucide-react';
 import ThemeToggleButton from './ui/theme-toggle-button';
+import AccountDropdown1 from "./ui/AccountDropdown1"; // Adjust path if needed
+
+
 
 // Simple Logo component
 const Logo = () => (
@@ -17,11 +20,8 @@ const NotificationMenu = () => (
 );
 
 // Simple User Menu
-const UserMenu = () => (
-  <button className="p-3 hover:bg-gray-800 rounded-md transition-colors">
-    <User size={20} className="text-gray-400 hover:text-white" />
-  </button>
-);
+const UserMenu = () => <AccountDropdown1 />;
+
 
 // Simple Select component
 const SelectTrigger = ({ children, className }) => (
