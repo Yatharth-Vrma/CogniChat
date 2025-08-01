@@ -5,10 +5,7 @@ import ThemeToggleButton from './ui/theme-toggle-button';
 // Simple Logo component
 const Logo = () => (
   <div className="flex items-center gap-2">
-    <div className="w-8 h-8 bg-pink-500 rounded-lg flex items-center justify-center">
-      <span className="text-white font-bold text-sm">M</span>
-    </div>
-    <span className="font-semibold text-white">Mvpblocks</span>
+    <span className="font-semibold text-white">CogniChat</span>
   </div>
 );
 

@@ -30,7 +30,33 @@ function App() {
 
   const handleFileUpload = (file) => {
     setActiveFile(file);
-    addToChatHistory(`Chat about ${file.name}`);
+    
+    // Check if there's an existing chat without messages
+    const emptyChat = chatHistory.find(chat => chat.messages.length === 0);
+    
+    if (emptyChat) {
+      // Update the existing empty chat with the file name
+      const updatedHistory = chatHistory.map(chat => 
+        chat.id === emptyChat.id 
+          ? { ...chat, title: `Chat about ${file.name}` }
+          : chat
+      );
+      setChatHistory(updatedHistory);
+      setActiveChat(emptyChat.id);
+    } else {
+      // Create new chat only if no empty chat exists
+      addToChatHistory(`Chat about ${file.name}`);
+    }
+  };
+
+  const updateChatTitle = (chatId, newTitle) => {
+    setChatHistory(prevHistory => 
+      prevHistory.map(chat => 
+        chat.id === chatId 
+          ? { ...chat, title: newTitle }
+          : chat
+      )
+    );
   };
 
   if (showSplash) {
@@ -54,6 +80,7 @@ function App() {
             chatHistory={chatHistory}
             setActiveChat={setActiveChat}
             activeChat={activeChat}
+            updateChatTitle={updateChatTitle}
           />
           <div className="main-content">
             <div className="file-section">

@@ -23,6 +23,7 @@
     "react-dropzone": "^14.3.8",
     "react-pdf": "^10.0.1",
     "react-scripts": "5.0.1",
+    "tabs": "^0.2.0",
     "tailwind-merge": "^3.3.1",
     "tw-animate-css": "^1.3.6",
     "web-vitals": "^2.1.4"

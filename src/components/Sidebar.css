@@ -61,6 +61,11 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  transition: all 0.2s ease;
 }
 
 .chat-item:hover {
@@ -71,4 +76,66 @@
 .chat-item.active {
   background-color: #ffffff;
   color: #000;
+}
+
+.chat-title {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-right: 8px;
+}
+
+.chat-menu-btn {
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  opacity: 0.7;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.chat-menu-btn:hover {
+  opacity: 1;
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.chat-item.active .chat-menu-btn:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.edit-chat-container {
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.edit-chat-input {
+  width: 100%;
+  background: transparent;
+  border: 1px solid #9C9C9C;
+  border-radius: 4px;
+  padding: 4px 8px;
+  color: inherit;
+  font-size: inherit;
+  font-family: inherit;
+  outline: none;
+}
+
+.edit-chat-input:focus {
+  border-color: #ffffff;
+  box-shadow: 0 0 0 1px #ffffff;
+}
+
+.chat-item.active .edit-chat-input {
+  color: #000;
+}
+
+.chat-item.active .edit-chat-input:focus {
+  border-color: #000;
+  box-shadow: 0 0 0 1px #000;
 }
