@@ -21,7 +21,7 @@ const FileViewer = ({ onFileUpload, file }) => {
       setTabs(prevTabs => [...prevTabs, newTab]);
       setActiveTabId(newTab.id);
     }
-  }, [file]);
+  }, [file, tabs]);
 
   useEffect(() => {
     const activeTab = tabs.find(tab => tab.id === activeTabId);
