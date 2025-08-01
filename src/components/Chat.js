@@ -75,13 +75,13 @@ const Chat = ({ activeChat, chatHistory, setChatHistory, addToChatHistory, file 
           New Chat
         </button>
       </div>
-      <div className="messages-container">
+      
+      <div className="chat-window">
         {currentChat?.messages.length > 0 ? (
           currentChat.messages.map(msg => (
-            <div key={msg.id} className={`message ${msg.sender}`}>
-              <div className="message-content">
-                <p>{msg.text}</p>
-                <span className="timestamp">{msg.timestamp}</span>
+            <div key={msg.id} className="message-row">
+              <div className={`message ${msg.sender === 'user' ? 'user-message' : 'bot-message'}`}>
+                <div className="message-text">{msg.text}</div>
               </div>
             </div>
           ))
@@ -93,6 +93,7 @@ const Chat = ({ activeChat, chatHistory, setChatHistory, addToChatHistory, file 
         )}
         <div ref={messagesEndRef} />
       </div>
+      
       <form onSubmit={handleSendMessage} className="message-form">
         <input
           type="text"
