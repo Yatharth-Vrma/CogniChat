@@ -38,19 +38,22 @@ const { getRootProps, getInputProps, isDragActive } = useDropzone({
   role="button"
   tabIndex={0}
   style={{
-    border: "3px dotted #9C9C9C",      // border-dashed, border color
-    borderRadius: "15%",                // rounded-xl
-    padding: "30px 90px",               // p-4 (16px), extra horizontal padding for width
-    minHeight: "13rem",                 // min-h-52
-    display: "flex",                    // flex
-    flexDirection: "column",            // flex-col
-    alignItems: "center",               // items-center
-    justifyContent: "center",           // justify-center
-    overflow: "hidden",                 // overflow-hidden
-    backgroundColor: isDragActive ? "#222" : "rgba(156,156,156,0.1)", // hover:bg-accent/50
-    transition: "background-color 0.3s",// transition-colors
-    cursor: "pointer",                  // cursor-pointer
-    textAlign: "center"                 // text-center
+    border: "2px dashed rgb(149, 120, 65)",
+    borderRadius: "12px",
+    padding: "40px 20px",
+    textAlign: "center",
+    background: "rgba(149, 120, 65, 0.05)",
+    transition: "all 0.3s ease",
+    cursor: "pointer",
+    minHeight: "200px",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "16px",
+    width: "100%",
+    maxWidth: "400px",
+    margin: "0 auto",                // text-center
   }}
 >
   <input {...getInputProps()} className="sr-only" aria-label="Upload file" />

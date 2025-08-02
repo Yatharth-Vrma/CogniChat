@@ -152,71 +152,101 @@ const FileViewer = ({ onFileUpload, file }) => {
       </div>
       
       {/* File Content Area */}
-      <div className="file-content">
-        {tabs.length === 0 ? (
-          <DragDropUploader onFileUpload={onFileUpload} />
-        ) : (
-          currentFile && (
-            <div className="file-preview-area">
-              {/* File Info Bar */}
-              
-              {/* File Body */}
-              <div className="file-body">
-                {currentFile.type === "text/plain" ? (
-                  <pre className="text-content">{fileContent}</pre>
-                ) : isPdf ? (
-                  <div className="pdf-container">
-                    <div className="pdf-viewer-notice">
-                      
-                      {/* Quick Actions */}
-                      <div className="pdf-quick-actions">
-                        <button 
-                          onClick={() => window.open(pdfUrl, '_blank')}
-                          className="pdf-action-btn primary"
-                        >
-                          🔍 View Full Screen
-                        </button>
-                      </div>
-                      
-                      {/* Embedded PDF Viewer */}
-                      <div className="pdf-embed-container">
-                        <iframe
-                          src={`${pdfUrl}#toolbar=1&navpanes=1&scrollbar=1&view=FitH`}
-                          width="100%"
-                          height="600px"
-                          title={`PDF Viewer - ${currentFile.name}`}
-                          className="pdf-iframe"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="unsupported-file">
-                    <div className="file-icon-large">{getFileIcon(currentFile.name)}</div>
-                    <h3>{currentFile.name}</h3>
-                    <p>Preview not available for this file type</p>
-                    <p><strong>Type:</strong> {currentFile.type || 'Unknown'}</p>
-                    <p><strong>Size:</strong> {(currentFile.size / 1024 / 1024).toFixed(2)} MB</p>
-                    <button 
-                      onClick={() => {
-                        const url = URL.createObjectURL(currentFile);
-                        const link = document.createElement('a');
-                        link.href = url;
-                        link.download = currentFile.name;
-                        link.click();
-                        URL.revokeObjectURL(url);
-                      }}
-                      className="download-btn"
-                    >
-                      📥 Download File
-                    </button>
-                  </div>
-                )}
+
+
+{/* File Content Area */}
+<div className={`file-content ${tabs.length === 0 ? 'file-content-empty' : ''}`}>
+  {tabs.length === 0 ? (
+    <DragDropUploader onFileUpload={onFileUpload} />
+  ) : (
+    currentFile && (
+      <div className="file-preview-area">
+        {/* File Info Bar */}
+        <div className="file-bar">
+          <div className="file-info">
+            <span className="file-type">{currentFile.name}</span>
+            <span className="file-size">
+              ({(currentFile.size / 1024 / 1024).toFixed(2)} MB)
+            </span>
+          </div>
+          {isPdf && (
+            <div className="pdf-controls">
+              <button 
+                onClick={() => window.open(pdfUrl, '_blank')}
+                className="pdf-control-btn"
+                title="Open in new tab"
+              >
+                🔗 Open
+              </button>
+              <a 
+                href={pdfUrl} 
+                download={currentFile.name}
+                className="pdf-control-btn"
+                title="Download PDF"
+              >
+                📥 Download
+              </a>
+            </div>
+          )}
+        </div>
+        
+        {/* File Body */}
+        <div className="file-body">
+          {currentFile.type === "text/plain" ? (
+            <pre className="text-content">{fileContent}</pre>
+          ) : isPdf ? (
+            <div className="pdf-container">
+              <div className="pdf-viewer-notice">
+                
+                {/* Quick Actions */}
+                <div className="pdf-quick-actions">
+                  <button 
+                    onClick={() => window.open(pdfUrl, '_blank')}
+                    className="pdf-action-btn primary"
+                  >
+                    🔍 View Full Screen
+                  </button>
+                </div>
+                
+                {/* Embedded PDF Viewer */}
+                <div className="pdf-embed-container">
+                  <iframe
+                    src={`${pdfUrl}#toolbar=1&navpanes=1&scrollbar=1&view=FitH`}
+                    width="100%"
+                    height="600px"
+                    title={`PDF Viewer - ${currentFile.name}`}
+                    className="pdf-iframe"
+                  />
+                </div>
               </div>
             </div>
-          )
-        )}
+          ) : (
+            <div className="unsupported-file">
+              <div className="file-icon-large">{getFileIcon(currentFile.name)}</div>
+              <h3>{currentFile.name}</h3>
+              <p>Preview not available for this file type</p>
+              <p><strong>Type:</strong> {currentFile.type || 'Unknown'}</p>
+              <p><strong>Size:</strong> {(currentFile.size / 1024 / 1024).toFixed(2)} MB</p>
+              <button 
+                onClick={() => {
+                  const url = URL.createObjectURL(currentFile);
+                  const link = document.createElement('a');
+                  link.href = url;
+                  link.download = currentFile.name;
+                  link.click();
+                  URL.revokeObjectURL(url);
+                }}
+                className="download-btn"
+              >
+                📥 Download File
+              </button>
+            </div>
+          )}
+        </div>
       </div>
+    )
+  )}
+</div>
     </div>
   );
 };
