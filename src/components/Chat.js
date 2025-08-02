@@ -19,17 +19,15 @@ const Chat = ({ activeChat, chatHistory, setChatHistory, addToChatHistory, file 
   };
 
   const handleSendMessage = async (e) => {
-    // CRITICAL FIX: Prevent form submission and page refresh
     e.preventDefault();
     e.stopPropagation();
     
     if (!message.trim() || isAITyping) return;
 
-    // Check if we have an active chat, if not create one
     let targetChatId = activeChat;
-    if (!targetChatId && chatHistory.length === 0) {
-      addToChatHistory('New Chat');
-      targetChatId = Date.now(); // This should match the ID from addToChatHistory
+    // If there's no active chat, create a new one.
+    if (!targetChatId) {
+      targetChatId = addToChatHistory('New Chat');
     }
 
     const newMessage = {
@@ -41,71 +39,50 @@ const Chat = ({ activeChat, chatHistory, setChatHistory, addToChatHistory, file 
 
     setChatHistory(prevHistory => {
       return prevHistory.map(chat => {
-        if (chat.id === (targetChatId || activeChat)) {
-          return {
-            ...chat,
-            messages: [...chat.messages, newMessage]
-          };
+        if (chat.id === targetChatId) {
+          return { ...chat, messages: [...chat.messages, newMessage] };
         }
         return chat;
       });
     });
 
     const userMessage = message;
-    setMessage(''); // Clear input immediately
-    setIsAITyping(true); // Show typing indicator
+    setMessage('');
+    setIsAITyping(true);
 
     try {
-      // Process file context if available
-      let fileContext = null;
-      if (file) {
-        fileContext = await aiService.processFileForAI(file);
-      }
-
-      // Get current chat history for context
-      const currentChatHistory = chatHistory.find(chat => chat.id === (targetChatId || activeChat))?.messages || [];
-
-      // Generate AI response
-      const aiResponse = await aiService.generateResponse(userMessage, fileContext, currentChatHistory);
+      const currentMessages = chatHistory.find(chat => chat.id === targetChatId)?.messages || [];
+      const aiResponseText = await aiService.getRAGAnswer(userMessage, currentMessages);
       
       const aiMessage = {
         id: Date.now() + 1,
-        text: aiResponse.text,
+        text: aiResponseText,
         sender: 'ai',
-        timestamp: aiResponse.timestamp,
-        model: aiResponse.model
+        timestamp: new Date().toLocaleTimeString(),
+        model: aiService.isConfigured() ? 'Gemini (RAG)' : 'Simulated'
       };
 
       setChatHistory(prevHistory => 
         prevHistory.map(chat => {
-          if (chat.id === (targetChatId || activeChat)) {
-            return {
-              ...chat,
-              messages: [...chat.messages, aiMessage]
-            };
+          if (chat.id === targetChatId) {
+            return { ...chat, messages: [...chat.messages, aiMessage] };
           }
           return chat;
         })
       );
     } catch (error) {
-      console.error('Error getting AI response:', error);
-      
-      // Add error message
+      console.error('Error getting RAG AI response:', error);
       const errorMessage = {
         id: Date.now() + 1,
-        text: "Sorry, I encountered an error while processing your request. Please try again.",
+        text: "Sorry, I encountered an error. It might be related to the AI service or API key. Please check the console for details.",
         sender: 'ai',
         timestamp: new Date().toLocaleTimeString(),
         error: true
       };
-
       setChatHistory(prevHistory => 
         prevHistory.map(chat => {
-          if (chat.id === (targetChatId || activeChat)) {
-            return {
-              ...chat,
-              messages: [...chat.messages, errorMessage]
-            };
+          if (chat.id === targetChatId) {
+            return { ...chat, messages: [...chat.messages, errorMessage] };
           }
           return chat;
         })

@@ -5,6 +5,7 @@ import Sidebar from './Sidebar';
 import FileViewer from './FileViewer';
 import Chat from './Chat';
 import TextRevealLetters from './ui/TextRevealLetters';
+import aiService from '../services/aiService';
 
 function Dashboard() {
   const [showSplash, setShowSplash] = useState(true);
@@ -44,8 +45,16 @@ const addToChatHistory = (title) => {
   return newChat.id; // Return the ID for reference
 };
 
-  const handleFileUpload = (file) => {
+  const handleFileUpload = async (file) => {
     setActiveFile(file);
+
+    try {
+      // New: Process and embed the document with the RAG service
+      await aiService.processAndEmbedDocument(file);
+    } catch (error) {
+      console.error("Error processing document:", error);
+      // Optionally, display an error message to the user
+    }
     
     // Check if there's an existing chat without messages
     const emptyChat = chatHistory.find(chat => chat.messages.length === 0);

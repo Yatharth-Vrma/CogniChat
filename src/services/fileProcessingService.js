@@ -108,6 +108,23 @@ class FileProcessingService {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   }
 
+  // New: Chunk text into smaller pieces for embedding
+  chunkText(text, chunkSize = 1000, overlap = 100) {
+    const chunks = [];
+    if (!text) return chunks;
+    let i = 0;
+    while (i < text.length) {
+      const end = Math.min(i + chunkSize, text.length);
+      chunks.push(text.slice(i, end));
+      i += chunkSize - overlap;
+      if (i >= text.length && end < text.length) {
+        // Add the last part if it's missed
+        chunks.push(text.slice(end));
+      }
+    }
+    return chunks;
+  }
+
   // Check if file type is supported for text extraction
   isTextExtractionSupported(file) {
     const supportedTypes = [
