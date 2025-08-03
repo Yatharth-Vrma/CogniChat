@@ -10,50 +10,185 @@ class AIService {
       console.warn("Gemini API key not configured. RAG and advanced features will be disabled.");
       this.genAI = null;
       this.embeddingModel = null;
-      this.generativeModel = null;
+      this.models = {};
       this.isInitialized = false;
     } else {
       try {
         this.genAI = new GoogleGenerativeAI(API_KEY);
         this.embeddingModel = this.genAI.getGenerativeModel({ model: "embedding-001" });
-        this.generativeModel = this.genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        
+        // Initialize all available models
+        this.models = {
+          'gemini-2.0-flash': this.genAI.getGenerativeModel({ model: "gemini-2.0-flash" }),
+          'gemini-2.0-flash-lite': this.genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite" }),
+          'gemini-2.5-flash': this.genAI.getGenerativeModel({ model: "gemini-2.5-flash" }),
+          'gemini-2.5-flash-lite': this.genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" }),
+          'gemini-1.5-flash': this.genAI.getGenerativeModel({ model: "gemini-1.5-flash" }),
+          'gemini-1.5-flash-lite': this.genAI.getGenerativeModel({ model: "gemini-1.5-flash-lite" })
+        };
+        
+        // Cascade order - try these models in sequence when rate limited
+        this.cascadeOrder = [
+          'gemini-2.0-flash',
+          'gemini-2.0-flash-lite', 
+          'gemini-2.5-flash',
+          'gemini-2.5-flash-lite',
+          'gemini-1.5-flash',
+          'gemini-1.5-flash-lite'
+        ];
+        
+        // Default and currently selected model
+        this.selectedModel = 'gemini-2.0-flash';
+        this.currentModel = this.models[this.selectedModel];
+        
         this.isInitialized = true;
-        console.log("✅ Gemini AI RAG Service Initialized");
+        console.log("✅ Gemini AI RAG Service Initialized with Multi-Model Cascade");
+        console.log("🔄 Available models:", Object.keys(this.models));
       } catch (error) {
         console.error("Failed to initialize Gemini AI:", error);
         this.isInitialized = false;
       }
     }
-    // No longer need to store vectors in memory
   }
 
   isConfigured() {
     return this.isInitialized;
   }
 
+  // Method to manually set the preferred model
+  setModel(modelName) {
+    if (this.models[modelName]) {
+      this.selectedModel = modelName;
+      this.currentModel = this.models[modelName];
+      console.log(`🔄 Model switched to: ${modelName}`);
+      return true;
+    }
+    console.error(`❌ Model not found: ${modelName}`);
+    return false;
+  }
+
+  // Get list of available models for the UI
+  getAvailableModels() {
+    return Object.keys(this.models).map(modelName => ({
+      id: modelName,
+      name: this.formatModelName(modelName),
+      description: this.getModelDescription(modelName)
+    }));
+  }
+
+  formatModelName(modelName) {
+    return modelName
+      .replace('gemini-', 'Gemini ')
+      .replace('-', '.')
+      .replace('flash', 'Flash')
+      .replace('lite', 'Lite')
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  }
+
+  getModelDescription(modelName) {
+    const descriptions = {
+      'gemini-2.0-flash': 'Latest, fastest, most intelligent',
+      'gemini-2.0-flash-lite': 'Latest, ultra-fast, lightweight',
+      'gemini-2.5-flash': 'Advanced, balanced performance',
+      'gemini-2.5-flash-lite': 'Advanced, fast, efficient',
+      'gemini-1.5-flash': 'Reliable, proven performance',
+      'gemini-1.5-flash-lite': 'Reliable, fast, economical'
+    };
+    return descriptions[modelName] || 'High-performance AI model';
+  }
+
+  getCurrentModel() {
+    return {
+      id: this.selectedModel,
+      name: this.formatModelName(this.selectedModel)
+    };
+  }
+
+  // Cascade fallback method - tries models in sequence when rate limited
+  async generateWithCascade(prompt) {
+    // Create cascade order starting with selected model
+    let cascadeOrder = [...this.cascadeOrder];
+    
+    // If a specific model is selected, prioritize it
+    if (this.selectedModel && cascadeOrder.includes(this.selectedModel)) {
+      // Remove selected model from its current position and put it first
+      cascadeOrder = cascadeOrder.filter(model => model !== this.selectedModel);
+      cascadeOrder.unshift(this.selectedModel);
+      console.log(`🎯 Prioritizing selected model: ${this.formatModelName(this.selectedModel)}`);
+    }
+    
+    for (let i = 0; i < cascadeOrder.length; i++) {
+      const modelName = cascadeOrder[i];
+      const model = this.models[modelName];
+      
+      try {
+        console.log(`🚀 Trying ${this.formatModelName(modelName)}...`);
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        
+        console.log(`✅ Success with ${this.formatModelName(modelName)}`);
+        return response.text();
+      } catch (error) {
+        console.log(`⚠️ ${this.formatModelName(modelName)} failed:`, error.message);
+        
+        if (error.message.includes('429') || error.message.includes('quota')) {
+          console.log(`💤 Rate limited on ${this.formatModelName(modelName)}, trying next model...`);
+          continue;
+        } else {
+          // Non-rate-limit error, don't continue cascade
+          throw error;
+        }
+      }
+    }
+    
+    // All models failed
+    throw new Error("All models are currently rate limited. Please try again in a few minutes.");
+  }
+
   // Step 1: Process, embed, and store the document in Supabase
   async processAndEmbedDocument(file) {
     if (!this.isInitialized) throw new Error("AI Service not initialized. Check API key.");
     
-    console.log("Starting document processing...");
+console.log("Starting document processing...");
     const documentText = await fileProcessingService.extractTextFromFile(file);
     const chunks = fileProcessingService.chunkText(documentText);
     
-    console.log(`Extracted ${chunks.length} chunks. Now embedding...`);
-    const embeddingResult = await this.embeddingModel.batchEmbedContents({
-      requests: chunks.map(chunk => ({ content: chunk }))
-    });
+    // Filter out empty or whitespace-only chunks to prevent API errors.
+       const validChunks = chunks.filter(chunk => chunk && chunk.trim() !== '');
+// ...existing code...
+    console.log(`Extracted ${validChunks.length} valid chunks. Now sanitizing and embedding...`);
 
-    const embeddings = embeddingResult.embeddings.map(e => e.values);
+    // Aggressively sanitize each chunk to remove any non-printable or non-standard characters.
+    // eslint-disable-next-line no-control-regex
+    const sanitizedChunks = validChunks.map(chunk => chunk.replace(/[^\x09\x0A\x0D\x20-\x7E]/g, ''));
 
-    // Prepare data for Supabase
-    const documentsToInsert = chunks.map((chunk, i) => ({
+    // Instead of batch embedding, use individual requests to avoid format issues
+    console.log("Embedding chunks individually...");
+    const embeddings = [];
+    
+    for (let i = 0; i < sanitizedChunks.length; i++) {
+      try {
+        const chunk = sanitizedChunks[i];
+        console.log(`Embedding chunk ${i + 1}/${sanitizedChunks.length}: "${chunk.substring(0, 50)}..."`);
+        
+        const result = await this.embeddingModel.embedContent(chunk);
+        embeddings.push(result.embedding.values);
+      } catch (error) {
+        console.error(`Error embedding chunk ${i}:`, error);
+        console.error(`Problematic chunk content:`, sanitizedChunks[i]);
+        throw new Error(`Failed to embed chunk ${i}: ${error.message}`);
+      }
+    }
+
+    // Prepare data for Supabase using the individually embedded chunks
+    const documentsToInsert = sanitizedChunks.map((chunk, i) => ({
       content: chunk,
       embedding: embeddings[i],
     }));
 
     console.log(`Embedding complete. Storing ${documentsToInsert.length} vectors in Supabase...`);
-    
     // Clear old documents before adding new ones
     const { error: deleteError } = await supabase.from('documents').delete().neq('id', -1);
     if (deleteError) {
@@ -85,42 +220,45 @@ class AIService {
     const queryEmbedding = (await this.embeddingModel.embedContent(query)).embedding.values;
 
     // Find the most relevant document chunks from Supabase
+// ...existing code...
+    // Find the most relevant document chunks from Supabase
     const { data: relevantChunks, error: matchError } = await supabase.rpc('match_documents', {
       query_embedding: queryEmbedding,
-      match_threshold: 0.70, // Adjust this threshold as needed
+      match_threshold: 0.30, // Lowered from 0.70 to 0.30 for more inclusive results
       match_count: 5
     });
 
     if (matchError) {
       console.error("Error matching documents in Supabase:", matchError);
+      console.error("Match error details:", matchError);
       return "I'm sorry, I had trouble searching the document. Please try again.";
     }
+    
+    console.log("✅ RAG Context Sent to AI:", relevantChunks ? relevantChunks.map(c => c.content) : 'No chunks found');
+    console.log("Number of chunks retrieved:", relevantChunks ? relevantChunks.length : 0);
+// ...existing code...
 
     if (!relevantChunks || relevantChunks.length === 0) {
-        // If no relevant chunks are found, use the standard model for a general chat
-        console.log("No relevant document chunks found. Using general knowledge.");
+        // If no relevant chunks are found, use the cascade system
+        console.log("No relevant document chunks found. Using general knowledge with cascade.");
         const historyString = chatHistory.map(m => `${m.sender}: ${m.text}`).join('\n');
         const prompt = `Conversation History:\n${historyString}\n\nUser's Question:\n${query}\n\nAnswer:`;
-        const result = await this.generativeModel.generateContent(prompt);
-        const response = await result.response;
-        return response.text();
+        return await this.generateWithCascade(prompt);
     }
 
-
-   // ...existing code...
+    // Construct the prompt with context
     const context = relevantChunks.map(item => item.content).join('\n\n---\n\n');
     const historyString = chatHistory.map(m => `${m.sender}: ${m.text}`).join('\n');
 
     const prompt = `
-      You are an expert AI assistant specialized in document analysis. Your primary goal is to provide accurate, relevant, and concise answers based exclusively on the provided document context.
+      You are an expert AI assistant specialized in document analysis. Your primary goal is to provide accurate, relevant, and helpful answers based on the provided document context.
 
-      **CRITICAL RULES:**
-      1.  **Strictly Grounded:** Base your entire answer on the "DOCUMENT CONTEXT" provided below. Do NOT use any external knowledge or information you were trained on.
-      2.  **No Assumptions:** If the answer is not explicitly found in the context, you MUST state: "I could not find the answer to that question in the provided document." Do not try to infer or guess.
-      3.  **Cite When Possible:** When you provide an answer, quote the most relevant sentence or phrase from the context that supports your answer.
-      4.  **Use Conversation History for Intent:** The "CONVERSATION HISTORY" is for understanding the user's line of questioning and intent. The factual basis for your answer must still come from the "DOCUMENT CONTEXT".
-      5.  **Plain Text Only:** Your final output must be plain text. Do not use Markdown formatting (e.g., do not use asterisks for bolding or lists, or hashes for headings).
-
+      **INSTRUCTIONS:**
+      1.  **Use the Document**: Base your answers primarily on the "DOCUMENT CONTEXT" provided below.
+      2.  **Be Helpful**: When the user asks for opinions or judgments (like "best project" or "most impressive skill"), you can analyze and interpret the information in the context to provide useful insights.
+      3.  **Stay Grounded**: While you can interpret and analyze, don't add information that isn't in the document.
+      4.  **Be Clear**: If information is genuinely missing from the document, say so, but try to be helpful with what is available.
+      5.  **Plain Text**: Use plain text formatting only.
 
       ---
 
@@ -139,16 +277,19 @@ class AIService {
 
       ---
 
-      **EXPERT ANSWER:**
+      **ANSWER:**
     `;
 
-    // Generate the final answer
-    const result = await this.generativeModel.generateContent(prompt);
-    const response = await result.response;
-    const rawText = response.text();
+    // Use cascade system for RAG responses too
+    const rawText = await this.generateWithCascade(prompt);
 
-    // Clean up any residual markdown formatting, specifically the double asterisks for bolding.
-    const cleanedText = rawText.replace(/\*\*/g, '');
+    // Clean up markdown formatting
+    const cleanedText = rawText
+      .replace(/^#+\s/gm, '')
+      .replace(/\*\*/g, '')
+      .replace(/\*/g, '')
+      .replace(/^[ \t]*(\*|-|\d+\.)\s/gm, '')
+      .trim();
 
     return cleanedText;
   }
@@ -157,7 +298,7 @@ class AIService {
     if (!this.isInitialized) {
       return 'Simulated Mode';
     }
-    return 'Gemini (RAG/Supabase)';
+    return `${this.formatModelName(this.selectedModel)} (RAG/Supabase)`;
   }
 }
 

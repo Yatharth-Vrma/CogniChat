@@ -369,6 +369,14 @@
   width: 100%;
 }
 
+.input-container input {
+  flex: 1;
+}
+
+.input-container .model-selector-wrapper {
+  flex-shrink: 0;
+}
+
 .message-form {
   display: flex;
   flex-direction: column;

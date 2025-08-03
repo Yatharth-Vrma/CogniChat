@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './Chat.css';
 import aiService from '../services/aiService';
+import ModelSelector from './ui/ModelSelector';
 
 const Chat = ({ activeChat, chatHistory, setChatHistory, addToChatHistory, file }) => {
   const [message, setMessage] = useState('');
   const [isAITyping, setIsAITyping] = useState(false);
+  const [selectedModel, setSelectedModel] = useState(null);
   const messagesEndRef = useRef(null);
   
   const currentChat = chatHistory.find(chat => chat.id === activeChat) || 
@@ -18,10 +20,20 @@ const Chat = ({ activeChat, chatHistory, setChatHistory, addToChatHistory, file 
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const handleSendMessage = async (e) => {
+  const handleModelChange = (modelId) => {
+    setSelectedModel(modelId);
+    if (aiService) {
+      aiService.setModel(modelId);
+    }
+  };
+
+  const handleSendMessage = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    
+    handleSend();
+  };
+
+  const handleSend = async () => {
     if (!message.trim() || isAITyping) return;
 
     let targetChatId = activeChat;
@@ -193,6 +205,10 @@ const Chat = ({ activeChat, chatHistory, setChatHistory, addToChatHistory, file 
             placeholder={isAITyping ? "AI is thinking..." : "Type your message here..."}
             autoComplete="off"
             disabled={isAITyping}
+          />
+          <ModelSelector
+            selectedModel={selectedModel}
+            onModelChange={handleModelChange}
           />
           <button 
             type="submit"
