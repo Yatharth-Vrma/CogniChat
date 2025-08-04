@@ -367,27 +367,6 @@ npm install
 npm start
 ```
 
----
-
-## 🗺 **Roadmap**
-
-### **Short Term**
-- [ ] Voice input/output
-- [ ] More file format support
-- [ ] Chat export functionality
-- [ ] Advanced search
-
-### **Medium Term**
-- [ ] Multi-language support
-- [ ] Plugin system
-- [ ] Collaboration features
-- [ ] Advanced analytics
-
-### **Long Term**
-- [ ] Custom AI model training
-- [ ] Enterprise features
-- [ ] Mobile apps
-- [ ] API for third-party integration
 
 ---
 
@@ -413,10 +392,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - 📖 **Docs**: Check the documentation files in this repository
 - 💬 **Discussions**: Use GitHub Discussions for questions
 
-### **Stay Updated**
-- ⭐ **Star** this repository
-- 👀 **Watch** for updates
-- 🔀 **Fork** to contribute
 
 ---
 
