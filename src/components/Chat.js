@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './Chat.css';
 import aiService from '../services/aiService';
-import chatService from '../services/chatService';
 import ModelSelector from './ui/ModelSelector';
 
-const Chat = ({ activeChat, chatHistory, setChatHistory, addToChatHistory, file, onClearFile, user, isLoadingChats }) => {
+const Chat = ({ activeChat, chatHistory, setChatHistory, addToChatHistory, file }) => {
   const [message, setMessage] = useState('');
   const [isAITyping, setIsAITyping] = useState(false);
   const [selectedModel, setSelectedModel] = useState(null);
@@ -35,22 +34,21 @@ const Chat = ({ activeChat, chatHistory, setChatHistory, addToChatHistory, file,
   };
 
   const handleSend = async () => {
-    if (!message.trim() || isAITyping || !user) return;
+    if (!message.trim() || isAITyping) return;
 
     let targetChatId = activeChat;
     // If there's no active chat, create a new one.
     if (!targetChatId) {
-      targetChatId = await addToChatHistory('New Chat');
+      targetChatId = addToChatHistory('New Chat');
     }
 
     const newMessage = {
-      id: `temp-msg-${Date.now()}`,
+      id: Date.now(),
       text: message,
       sender: 'user',
       timestamp: new Date().toLocaleTimeString()
     };
 
-    // Add message to local state immediately
     setChatHistory(prevHistory => {
       return prevHistory.map(chat => {
         if (chat.id === targetChatId) {
@@ -64,43 +62,18 @@ const Chat = ({ activeChat, chatHistory, setChatHistory, addToChatHistory, file,
     setMessage('');
     setIsAITyping(true);
 
-    // Save user message to database if chat is not temporary
-    const currentChat = chatHistory.find(chat => chat.id === targetChatId);
-    if (currentChat && !currentChat.isTemporary) {
-      try {
-        const savedMessageId = await chatService.saveMessage(targetChatId, user.id, newMessage);
-        // Update message with real ID
-        setChatHistory(prevHistory => 
-          prevHistory.map(chat => {
-            if (chat.id === targetChatId) {
-              return {
-                ...chat,
-                messages: chat.messages.map(msg =>
-                  msg.id === newMessage.id ? { ...msg, id: savedMessageId } : msg
-                )
-              };
-            }
-            return chat;
-          })
-        );
-      } catch (error) {
-        console.error('Error saving user message:', error);
-      }
-    }
-
     try {
       const currentMessages = chatHistory.find(chat => chat.id === targetChatId)?.messages || [];
       const aiResponseText = await aiService.getRAGAnswer(userMessage, currentMessages);
       
       const aiMessage = {
-        id: `temp-ai-${Date.now()}`,
+        id: Date.now() + 1,
         text: aiResponseText,
-        sender: 'assistant',
+        sender: 'ai',
         timestamp: new Date().toLocaleTimeString(),
         model: aiService.isConfigured() ? 'Gemini (RAG)' : 'Simulated'
       };
 
-      // Add AI message to local state
       setChatHistory(prevHistory => 
         prevHistory.map(chat => {
           if (chat.id === targetChatId) {
@@ -109,35 +82,12 @@ const Chat = ({ activeChat, chatHistory, setChatHistory, addToChatHistory, file,
           return chat;
         })
       );
-
-      // Save AI message to database if chat is not temporary
-      if (currentChat && !currentChat.isTemporary) {
-        try {
-          const savedAiMessageId = await chatService.saveMessage(targetChatId, user.id, aiMessage);
-          // Update AI message with real ID
-          setChatHistory(prevHistory => 
-            prevHistory.map(chat => {
-              if (chat.id === targetChatId) {
-                return {
-                  ...chat,
-                  messages: chat.messages.map(msg =>
-                    msg.id === aiMessage.id ? { ...msg, id: savedAiMessageId } : msg
-                  )
-                };
-              }
-              return chat;
-            })
-          );
-        } catch (error) {
-          console.error('Error saving AI message:', error);
-        }
-      }
     } catch (error) {
       console.error('Error getting RAG AI response:', error);
       const errorMessage = {
-        id: `temp-error-${Date.now()}`,
+        id: Date.now() + 1,
         text: "Sorry, I encountered an error. It might be related to the AI service or API key. Please check the console for details.",
-        sender: 'assistant',
+        sender: 'ai',
         timestamp: new Date().toLocaleTimeString(),
         error: true
       };
@@ -154,27 +104,9 @@ const Chat = ({ activeChat, chatHistory, setChatHistory, addToChatHistory, file,
     }
   };
 
-  const startNewChat = async () => {
-    // Create a completely new chat without any file
-    await addToChatHistory('New Chat', true); // Pass true to clear file
+  const startNewChat = () => {
+    addToChatHistory(file ? `Chat about ${file.name}` : 'New Chat');
   };
-
-  // Show loading state if chats are still being loaded
-  if (isLoadingChats) {
-    return (
-      <div className="chat-container">
-        <div className="chat-header">
-          <h3>Loading...</h3>
-        </div>
-        <div className="chat-window">
-          <div className="empty-chat">
-            <h3>Loading your chats...</h3>
-            <p>Please wait while we fetch your conversation history.</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="chat-container">

@@ -1,10 +1,16 @@
 import React, { useState } from 'react';
 import './Sidebar.css';
 
-const Sidebar = ({ isOpen, toggleSidebar, chatHistory, setActiveChat, activeChat, updateChatTitle, deleteChat }) => {
+const Sidebar = ({ isOpen, toggleSidebar, chatHistory, setActiveChat, activeChat, updateChatTitle }) => {
   const [editingChatId, setEditingChatId] = useState(null);
   const [editingTitle, setEditingTitle] = useState('');
-  const [contextMenu, setContextMenu] = useState({ show: false, x: 0, y: 0, chatId: null });
+  const [hoveredChatId, setHoveredChatId] = useState(null);
+
+  const handleEditStart = (chat, e) => {
+    e.stopPropagation();
+    setEditingChatId(chat.id);
+    setEditingTitle(chat.title);
+  };
 
   const handleEditSave = (chatId) => {
     if (editingTitle.trim()) {
@@ -27,53 +33,6 @@ const Sidebar = ({ isOpen, toggleSidebar, chatHistory, setActiveChat, activeChat
     }
   };
 
-  const handleDeleteChat = async (chat, e) => {
-    e.stopPropagation();
-    if (window.confirm(`Are you sure you want to delete "${chat.title}"?`)) {
-      if (deleteChat) {
-        await deleteChat(chat.id);
-      }
-    }
-  };
-
-  const handleRightClick = (e, chat) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setContextMenu({
-      show: true,
-      x: e.clientX,
-      y: e.clientY,
-      chatId: chat.id,
-      chatTitle: chat.title
-    });
-  };
-
-  const handleContextMenuAction = (action, chatId, chatTitle) => {
-    setContextMenu({ show: false, x: 0, y: 0, chatId: null });
-    
-    if (action === 'rename') {
-      setEditingChatId(chatId);
-      setEditingTitle(chatTitle);
-    } else if (action === 'delete') {
-      const chat = chatHistory.find(c => c.id === chatId);
-      if (chat) {
-        handleDeleteChat(chat, { stopPropagation: () => {} });
-      }
-    }
-  };
-
-  // Close context menu when clicking elsewhere
-  React.useEffect(() => {
-    const handleClickOutside = () => {
-      if (contextMenu.show) {
-        setContextMenu({ show: false, x: 0, y: 0, chatId: null });
-      }
-    };
-
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
-  }, [contextMenu.show]);
-
   return (
     <div className={`sidebar ${isOpen ? 'open' : 'closed'}`}>
       <div className="sidebar-header">
@@ -89,7 +48,8 @@ const Sidebar = ({ isOpen, toggleSidebar, chatHistory, setActiveChat, activeChat
               key={chat.id} 
               className={`chat-item ${activeChat === chat.id ? 'active' : ''}`}
               onClick={() => setActiveChat(chat.id)}
-              onContextMenu={(e) => handleRightClick(e, chat)}
+              onMouseEnter={() => setHoveredChatId(chat.id)}
+              onMouseLeave={() => setHoveredChatId(null)}
             >
               {editingChatId === chat.id ? (
                 <div className="edit-chat-container">
@@ -105,39 +65,21 @@ const Sidebar = ({ isOpen, toggleSidebar, chatHistory, setActiveChat, activeChat
                   />
                 </div>
               ) : (
-                <span className="chat-title">
-                  {chat.file ? '📎 ' : ''}
-                  {chat.title}
-                </span>
+                <>
+                  <span className="chat-title">{chat.title}</span>
+                  {hoveredChatId === chat.id && (
+                    <button
+                      className="chat-menu-btn"
+                      onClick={(e) => handleEditStart(chat, e)}
+                      title="Edit chat name"
+                    >
+                      ⋯
+                    </button>
+                  )}
+                </>
               )}
             </div>
           ))}
-        </div>
-      )}
-      
-      {/* Context Menu */}
-      {contextMenu.show && (
-        <div 
-          className="context-menu"
-          style={{
-            position: 'fixed',
-            top: contextMenu.y,
-            left: contextMenu.x,
-            zIndex: 1000
-          }}
-        >
-          <div 
-            className="context-menu-item"
-            onClick={() => handleContextMenuAction('rename', contextMenu.chatId, contextMenu.chatTitle)}
-          >
-            Rename
-          </div>
-          <div 
-            className="context-menu-item delete"
-            onClick={() => handleContextMenuAction('delete', contextMenu.chatId, contextMenu.chatTitle)}
-          >
-            Delete
-          </div>
         </div>
       )}
     </div>

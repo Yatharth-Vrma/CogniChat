@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import './FileViewer.css';
 import DragDropUploader from './DragDropUploader';
 
-const FileViewer = ({ onFileUpload, file, onFileRemove }) => {
+const FileViewer = ({ onFileUpload, file }) => {
   const [fileContent, setFileContent] = useState('');
   const [tabs, setTabs] = useState([]);
   const [activeTabId, setActiveTabId] = useState(null);
@@ -77,15 +77,9 @@ const FileViewer = ({ onFileUpload, file, onFileRemove }) => {
         // Switch to the previous tab or first available
         const currentIndex = tabs.findIndex(tab => tab.id === tabId);
         const nextIndex = currentIndex > 0 ? currentIndex - 1 : 0;
-        const nextTab = newTabs[nextIndex];
-        setActiveTabId(nextTab.id);
-        onFileUpload(nextTab.file); // Update parent component
+        setActiveTabId(newTabs[nextIndex]?.id || null);
       } else {
-        // No tabs left, clear everything
         setActiveTabId(null);
-        if (onFileRemove) {
-          onFileRemove(); // Clear file from parent component
-        }
       }
     }
   };
