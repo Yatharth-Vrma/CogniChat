@@ -67,12 +67,24 @@
   color: rgb(var(--muted-foreground) / 0.7);
 }
 
+.text-foreground {
+  color: rgb(var(--foreground));
+}
+
+.bg-background {
+  background-color: rgb(var(--background));
+}
+
 .bg-accent {
   background-color: rgb(var(--accent));
 }
 
 .text-accent-foreground {
   color: rgb(var(--accent-foreground));
+}
+
+.border-border {
+  border-color: rgb(var(--border));
 }
 
 .border-input {

@@ -69,13 +69,13 @@ export default function ThemeToggleButton({ variant = 'default', url }) {
     <button
       onClick={toggleTheme}
       disabled={isAnimating}
-      className="p-3 hover:bg-gray-800 dark:hover:bg-gray-700 rounded-md transition-colors disabled:opacity-50"
+      className="p-3 hover:bg-accent rounded-md transition-colors disabled:opacity-50"
       aria-label="Toggle theme"
     >
       {theme === 'light' ? (
-        <Moon size={20} className="text-gray-400 hover:text-white" />
+        <Moon size={20} className="text-muted-foreground hover:text-foreground" />
       ) : (
-        <Sun size={20} className="text-gray-400 hover:text-white" />
+        <Sun size={20} className="text-muted-foreground hover:text-foreground" />
       )}
     </button>
   );

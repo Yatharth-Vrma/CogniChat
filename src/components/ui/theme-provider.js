@@ -18,6 +18,9 @@ export function ThemeProvider({
   useEffect(() => {
     const root = window.document.documentElement;
 
+    // Add theme switching class for smooth transition
+    root.classList.add('theme-switching');
+
     root.classList.remove('light', 'dark');
 
     if (theme === 'system') {
@@ -27,10 +30,14 @@ export function ThemeProvider({
         : 'light';
 
       root.classList.add(systemTheme);
-      return;
+    } else {
+      root.classList.add(theme);
     }
 
-    root.classList.add(theme);
+    // Remove theme switching class after transition
+    setTimeout(() => {
+      root.classList.remove('theme-switching');
+    }, 800);
   }, [theme]);
 
   const value = {

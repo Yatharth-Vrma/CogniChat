@@ -6,8 +6,8 @@
   gap: 2px;
   padding: 0 12px;
   height: 44px;
-  border-bottom: 1.5px solid #444;
-  background: #191919;
+  border-bottom: 1.5px solid rgb(var(--border));
+  background: rgb(var(--background));
   position: relative;
   z-index: 2;
   overflow-x: auto;
@@ -15,8 +15,8 @@
 }
 
 .file-tab {
-  background: #232323;
-  color: #fff;
+  background: rgb(var(--muted));
+  color: rgb(var(--muted-foreground));
   border: none;
   outline: none;
   padding: 6px 12px;
@@ -37,14 +37,15 @@
 }
 
 .file-tab:hover {
-  background: #2a2a2a;
+  background: rgb(var(--accent));
+  color: rgb(var(--accent-foreground));
   transform: translateY(-1px);
 }
 
 .file-tab.active {
-  background: #191919;
-  color: rgb(149, 120, 65);
-  border-bottom: 2.5px solid rgb(149, 120, 65);
+  background: rgb(var(--background));
+  color: rgb(var(--primary));
+  border-bottom: 2.5px solid rgb(var(--primary));
 }
 
 .file-icon {
@@ -63,7 +64,7 @@
 .close-tab-btn {
   background: none;
   border: none;
-  color: #888;
+  color: rgb(var(--muted-foreground));
   cursor: pointer;
   font-size: 16px;
   padding: 2px 4px;
@@ -74,13 +75,13 @@
 }
 
 .close-tab-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: #ff6b6b;
+  background: rgb(var(--accent));
+  color: rgb(239 68 68); /* Red color for close button */
 }
 
 .add-tab-btn {
-  background: #2a2a2a;
-  color: rgb(149, 120, 65);
+  background: rgb(var(--muted));
+  color: rgb(var(--primary));
   border: none;
   outline: none;
   padding: 8px 12px;
@@ -99,8 +100,8 @@
 }
 
 .add-tab-btn:hover {
-  background: rgb(149, 120, 65);
-  color: #fff;
+  background: rgb(var(--primary));
+  color: rgb(var(--primary-foreground));
   transform: translateY(-1px);
 }
 
@@ -109,8 +110,8 @@
   justify-content: space-between;
   align-items: center;
   padding: 8px 16px;
-  background: #2a2a2a;
-  border-bottom: 1px solid #444;
+  background: rgb(var(--muted));
+  border-bottom: 1px solid rgb(var(--border));
 }
 
 .file-info {
@@ -120,13 +121,13 @@
 }
 
 .file-type {
-  color: #fff;
+  color: rgb(var(--foreground));
   font-size: 13px;
   font-weight: 500;
 }
 
 .file-size {
-  color: #888;
+  color: rgb(var(--muted-foreground));
   font-size: 11px;
 }
 
@@ -138,8 +139,8 @@
 
 .pdf-control-btn {
   padding: 4px 8px;
-  background: rgb(149, 120, 65);
-  color: white;
+  background: rgb(var(--primary));
+  color: rgb(var(--primary-foreground));
   text-decoration: none;
   border: none;
   border-radius: 4px;
@@ -166,7 +167,7 @@
   align-items: center;
   justify-content: center;
   height: 400px;
-  color: #9C9C9C;
+  color: rgb(var(--muted-foreground));
   text-align: center;
   gap: 10px;
 }
@@ -177,7 +178,7 @@
 }
 
 .unsupported-file h3 {
-  color: rgb(149, 120, 65);
+  color: rgb(var(--primary));
   margin: 10px 0;
 }
 
@@ -187,11 +188,11 @@
 }
 
 .file-header-tabs::-webkit-scrollbar-track {
-  background: #191919;
+  background: rgb(var(--background));
 }
 
 .file-header-tabs::-webkit-scrollbar-thumb {
-  background: rgb(149, 120, 65);
+  background: rgb(var(--primary));
   border-radius: 2px;
 }
 

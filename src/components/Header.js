@@ -9,14 +9,14 @@ import Settings from './Settings';
 // Simple Logo component
 const Logo = () => (
   <div className="flex items-center gap-2">
-    <span className="font-semibold text-white">CogniChat</span>
+    <span className="font-semibold text-foreground">CogniChat</span>
   </div>
 );
 
 // Simple Notification Menu
 const NotificationMenu = () => (
-  <button className="p-3 hover:bg-gray-800 rounded-md transition-colors">
-    <Bell size={20} className="text-gray-400 hover:text-white" />
+  <button className="p-3 hover:bg-accent rounded-md transition-colors">
+    <Bell size={20} className="text-muted-foreground hover:text-foreground" />
   </button>
 );
 
@@ -24,10 +24,10 @@ const NotificationMenu = () => (
 const SettingsMenu = ({ onClick }) => (
   <button 
     onClick={onClick}
-    className="p-3 hover:bg-gray-800 rounded-md transition-colors"
+    className="p-3 hover:bg-accent rounded-md transition-colors"
     title="Settings"
   >
-    <SettingsIcon size={20} className="text-gray-400 hover:text-white" />
+    <SettingsIcon size={20} className="text-muted-foreground hover:text-foreground" />
   </button>
 );
 
@@ -37,13 +37,13 @@ const UserMenu = () => <AccountDropdown1 />;
 
 // Simple Select component
 const SelectTrigger = ({ children, className }) => (
-  <button className={`flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-gray-800 rounded-md transition-colors ${className}`}>
+  <button className={`flex items-center gap-2 px-3 py-1.5 text-sm hover:bg-accent rounded-md transition-colors ${className}`}>
     {children}
   </button>
 );
 
 const SelectValue = ({ placeholder }) => (
-  <span className="text-white">{placeholder}</span>
+  <span className="text-foreground">{placeholder}</span>
 );
 
 export default function Header() {
@@ -51,26 +51,26 @@ export default function Header() {
 
   return (
     <>
-      <header className="border-b border-gray-700 bg-black px-4 md:px-6">
+      <header className="border-b border-border bg-background px-4 md:px-6">
         <div className="flex h-16 items-center justify-between gap-4">
           {/* Left side */}
           <div className="flex items-center gap-2">
             <nav className="flex items-center space-x-2 text-sm">
-              <button className="text-white hover:text-pink-500 transition-colors">
+              <button className="text-foreground hover:text-pink-500 transition-colors">
                 <Logo />
               </button>
-              <span className="text-gray-400">/</span>
-              <button className="text-gray-400 hover:text-white transition-colors hidden md:inline">
+              <span className="text-muted-foreground">/</span>
+              <button className="text-muted-foreground hover:text-foreground transition-colors hidden md:inline">
                 Personal Account
               </button>
-              <span className="text-gray-400 hidden md:inline">/</span>
-              <button className="text-gray-400 hover:text-white transition-colors hidden md:inline">
+              <span className="text-muted-foreground hidden md:inline">/</span>
+              <button className="text-muted-foreground hover:text-foreground transition-colors hidden md:inline">
                 Projects
               </button>
-              <span className="text-gray-400">/</span>
-              <SelectTrigger className="focus-visible:bg-gray-800 text-white h-8 px-1.5 focus-visible:ring-0">
+              <span className="text-muted-foreground">/</span>
+              <SelectTrigger className="focus-visible:bg-accent text-foreground h-8 px-1.5 focus-visible:ring-0">
                 <SelectValue placeholder="Main project" />
-                <ChevronsUpDown size={14} className="text-gray-400" />
+                <ChevronsUpDown size={14} className="text-muted-foreground" />
               </SelectTrigger>
             </nav>
           </div>

@@ -101,11 +101,11 @@
 
 .chat-menu-btn:hover {
   opacity: 1;
-  background-color: rgba(0, 0, 0, 0.1);
+  background-color: rgb(var(--muted) / 0.3);
 }
 
 .chat-item.active .chat-menu-btn:hover {
-  background-color: rgba(255, 255, 255, 0.2);
+  background-color: rgb(var(--foreground) / 0.2);
 }
 
 .edit-chat-container {

@@ -46,7 +46,7 @@
 .file-section {
   flex: 1;
   padding: 20px;
-  border-right: 1px solid #9C9C9C;
+  border-right: 1px solid rgb(var(--border));
   overflow-y: auto;
 }
 
@@ -62,14 +62,14 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #000;
+  background: rgb(var(--background));
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #9C9C9C;
+  background: rgb(var(--muted-foreground));
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #ffffff;
+  background: rgb(var(--foreground));
 }

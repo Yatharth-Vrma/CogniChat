@@ -73,12 +73,12 @@ export default function DragDropUploader({ onFileUpload }) {
               </p>
               
               {file && (
-                <div className="flex flex-col items-center w-full max-w-xs relative bg-gray-800/50 rounded-lg p-3">
-                  <p className="text-sm font-medium text-gray-100 pr-6 truncate w-full text-center">{file.name}</p>
+                <div className="flex flex-col items-center w-full max-w-xs relative bg-accent/50 rounded-lg p-3">
+                  <p className="text-sm font-medium text-accent-foreground pr-6 truncate w-full text-center">{file.name}</p>
                   <div className="absolute top-2 right-2">
                     <button
                       type="button"
-                      className="z-50 flex size-6 cursor-pointer items-center justify-center rounded-full bg-black/60 text-white transition outline-none hover:bg-black/80"
+                      className="z-50 flex size-6 cursor-pointer items-center justify-center rounded-full bg-background/60 border border-border text-foreground transition outline-none hover:bg-background/80"
                       onClick={e => { e.stopPropagation(); setFile(null); onFileUpload(null); }}
                       aria-label="Remove file"
                     >
