@@ -182,13 +182,14 @@ console.log("Starting document processing...");
       }
     }
 
-    // Prepare data for Supabase using the individually embedded chunks
+    // Prepare data for Supabase using the existing documents table
     const documentsToInsert = sanitizedChunks.map((chunk, i) => ({
       content: chunk,
-      embedding: embeddings[i],
+      embedding: embeddings[i]
     }));
 
     console.log(`Embedding complete. Storing ${documentsToInsert.length} vectors in Supabase...`);
+    
     // Clear old documents before adding new ones
     const { error: deleteError } = await supabase.from('documents').delete().neq('id', -1);
     if (deleteError) {
@@ -219,9 +220,7 @@ console.log("Starting document processing...");
     // Embed the user's query
     const queryEmbedding = (await this.embeddingModel.embedContent(query)).embedding.values;
 
-    // Find the most relevant document chunks from Supabase
-// ...existing code...
-    // Find the most relevant document chunks from Supabase
+    // Find the most relevant document chunks from Supabase using existing function
     const { data: relevantChunks, error: matchError } = await supabase.rpc('match_documents', {
       query_embedding: queryEmbedding,
       match_threshold: 0.30, // Lowered from 0.70 to 0.30 for more inclusive results

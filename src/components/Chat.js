@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './Chat.css';
 import aiService from '../services/aiService';
+import chatService from '../services/chatService';
 import ModelSelector from './ui/ModelSelector';
 
-const Chat = ({ activeChat, chatHistory, setChatHistory, addToChatHistory, file }) => {
+const Chat = ({ activeChat, chatHistory, setChatHistory, addToChatHistory, file, user }) => {
   const [message, setMessage] = useState('');
   const [isAITyping, setIsAITyping] = useState(false);
   const [selectedModel, setSelectedModel] = useState(null);
@@ -39,39 +40,89 @@ const Chat = ({ activeChat, chatHistory, setChatHistory, addToChatHistory, file 
     let targetChatId = activeChat;
     // If there's no active chat, create a new one.
     if (!targetChatId) {
-      targetChatId = addToChatHistory('New Chat');
+      targetChatId = await addToChatHistory('New Chat');
+      if (!targetChatId) {
+        console.error('Failed to create new chat');
+        return;
+      }
     }
-
-    const newMessage = {
-      id: Date.now(),
-      text: message,
-      sender: 'user',
-      timestamp: new Date().toLocaleTimeString()
-    };
-
-    setChatHistory(prevHistory => {
-      return prevHistory.map(chat => {
-        if (chat.id === targetChatId) {
-          return { ...chat, messages: [...chat.messages, newMessage] };
-        }
-        return chat;
-      });
-    });
 
     const userMessage = message;
     setMessage('');
     setIsAITyping(true);
 
+    // Create temporary message for immediate UI update
+    const tempUserMessage = {
+      id: `temp-${Date.now()}`,
+      text: userMessage,
+      sender: 'user',
+      timestamp: new Date().toLocaleTimeString()
+    };
+
+    // Update UI immediately
+    setChatHistory(prevHistory => {
+      return prevHistory.map(chat => {
+        if (chat.id === targetChatId) {
+          return { ...chat, messages: [...chat.messages, tempUserMessage] };
+        }
+        return chat;
+      });
+    });
+
     try {
+      // Save user message to database
+      let savedUserMessage = null;
+      if (user) {
+        savedUserMessage = await chatService.saveMessage(
+          targetChatId, 
+          user.id, 
+          userMessage, 
+          'user'
+        );
+      }
+
+      // Replace temp message with saved message
+      if (savedUserMessage) {
+        setChatHistory(prevHistory => {
+          return prevHistory.map(chat => {
+            if (chat.id === targetChatId) {
+              const updatedMessages = chat.messages.map(msg => 
+                msg.id === tempUserMessage.id ? savedUserMessage : msg
+              );
+              return { ...chat, messages: updatedMessages };
+            }
+            return chat;
+          });
+        });
+      }
+
+      // Get AI response
       const currentMessages = chatHistory.find(chat => chat.id === targetChatId)?.messages || [];
       const aiResponseText = await aiService.getRAGAnswer(userMessage, currentMessages);
       
-      const aiMessage = {
+      const aiMetadata = {
+        model: aiService.isConfigured() ? 'Gemini (RAG)' : 'Simulated'
+      };
+
+      // Save AI message to database
+      let savedAiMessage = null;
+      if (user) {
+        savedAiMessage = await chatService.saveMessage(
+          targetChatId,
+          user.id,
+          aiResponseText,
+          'assistant',
+          aiMetadata
+        );
+      }
+
+      // Create fallback AI message if database save fails
+      const aiMessage = savedAiMessage || {
         id: Date.now() + 1,
         text: aiResponseText,
-        sender: 'ai',
+        sender: 'assistant',
         timestamp: new Date().toLocaleTimeString(),
-        model: aiService.isConfigured() ? 'Gemini (RAG)' : 'Simulated'
+        model: aiMetadata.model
       };
 
       setChatHistory(prevHistory => 
@@ -84,13 +135,36 @@ const Chat = ({ activeChat, chatHistory, setChatHistory, addToChatHistory, file 
       );
     } catch (error) {
       console.error('Error getting RAG AI response:', error);
-      const errorMessage = {
+      
+      const errorMetadata = {
+        error: true,
+        model: 'Error'
+      };
+
+      // Save error message to database
+      let savedErrorMessage = null;
+      if (user) {
+        try {
+          savedErrorMessage = await chatService.saveMessage(
+            targetChatId,
+            user.id,
+            "Sorry, I encountered an error. It might be related to the AI service or API key. Please check the console for details.",
+            'assistant',
+            errorMetadata
+          );
+        } catch (dbError) {
+          console.error('Error saving error message to database:', dbError);
+        }
+      }
+
+      const errorMessage = savedErrorMessage || {
         id: Date.now() + 1,
         text: "Sorry, I encountered an error. It might be related to the AI service or API key. Please check the console for details.",
-        sender: 'ai',
+        sender: 'assistant',
         timestamp: new Date().toLocaleTimeString(),
         error: true
       };
+
       setChatHistory(prevHistory => 
         prevHistory.map(chat => {
           if (chat.id === targetChatId) {

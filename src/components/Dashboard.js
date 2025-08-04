@@ -10,131 +10,102 @@ import chatService from '../services/chatService';
 import { useAuth } from '../contexts/AuthContext';
 
 function Dashboard() {
-  const { user } = useAuth();
   const [showSplash, setShowSplash] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [chatHistory, setChatHistory] = useState([]);
   const [activeFile, setActiveFile] = useState(null);
   const [activeChat, setActiveChat] = useState(null);
-  const [isLoadingChats, setIsLoadingChats] = useState(true);
-  
+  const [isLoading, setIsLoading] = useState(true);
+  const { user } = useAuth();
 
-  // Load user's chats when component mounts
+  // Load user's chats from database when component mounts
   useEffect(() => {
-    const loadChats = async () => {
-      if (user) {
-        setIsLoadingChats(true);
-        try {
-          const userChats = await chatService.loadUserChats(user.id);
-          if (userChats.length > 0) {
-            setChatHistory(userChats);
-            setActiveChat(userChats[0].id);
-            // If the first chat has a file, set it as active
-            if (userChats[0].file) {
-              setActiveFile(userChats[0].file);
-            }
-          } else {
-            // Create a default welcome chat if no chats exist
-            const defaultChat = {
-              id: `temp-${Date.now()}`,
-              title: 'Welcome Chat',
-              messages: [],
-              isTemporary: true
-            };
-            setChatHistory([defaultChat]);
-            setActiveChat(defaultChat.id);
-          }
-        } catch (error) {
-          console.error('Error loading chats:', error);
-          // Fallback to default chat
-          const defaultChat = {
-            id: `temp-${Date.now()}`,
-            title: 'Welcome Chat',
-            messages: [],
-            isTemporary: true
-          };
+    const loadUserChats = async () => {
+      if (!user) return;
+      
+      setIsLoading(true);
+      try {
+        const dbChats = await chatService.getUserChats(user.id);
+        const formattedChats = await chatService.formatChatsForUI(dbChats);
+        
+        setChatHistory(formattedChats);
+        
+        // Set the most recent chat as active if available
+        if (formattedChats.length > 0) {
+          setActiveChat(formattedChats[0].id);
+        }
+      } catch (error) {
+        console.error('Error loading chats:', error);
+        // Create a default chat if loading fails
+        const defaultChat = await createDefaultChat();
+        if (defaultChat) {
           setChatHistory([defaultChat]);
           setActiveChat(defaultChat.id);
-        } finally {
-          setIsLoadingChats(false);
         }
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    loadChats();
+    loadUserChats();
   }, [user]);
 
-  // Update active file when switching chats
-  useEffect(() => {
-    if (activeChat && chatHistory.length > 0) {
-      const currentChat = chatHistory.find(chat => chat.id === activeChat);
-      if (currentChat?.file) {
-        setActiveFile(currentChat.file);
-      } else if (!currentChat?.file && activeFile) {
-        // Only clear active file if the new chat doesn't have a file 
-        // and we're not in the middle of uploading a new file
-        setActiveFile(null);
+  // Create default chat for new users or when loading fails
+  const createDefaultChat = async () => {
+    if (!user) return null;
+    
+    try {
+      const newChat = await chatService.createChat(user.id, 'Welcome Chat');
+      if (newChat) {
+        return {
+          ...newChat,
+          messages: []
+        };
       }
+    } catch (error) {
+      console.error('Error creating default chat:', error);
     }
-  }, [activeChat, chatHistory, activeFile]);
+    return null;
+  };
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
   };
 
-  const addToChatHistory = async (title, shouldClearFile = true) => {
+  const addToChatHistory = async (title) => {
     if (!user) return null;
 
-    const newChat = {
-      id: `temp-${Date.now()}`, // Temporary ID until saved to DB
-      title: title || `Chat ${chatHistory.length + 1}`,
-      messages: [],
-      isTemporary: true
-    };
-    
-    setChatHistory(prevHistory => [newChat, ...prevHistory]);
-    setActiveChat(newChat.id);
-    
-    // Clear the active file when starting a truly new chat (not file-based)
-    if (shouldClearFile && !title?.includes('Chat about')) {
-      setActiveFile(null);
-    }
-    
-    // Save to database in the background
     try {
-      const chatData = {
-        title: newChat.title,
-        file: shouldClearFile ? null : activeFile
-      };
-      
-      const savedChatId = await chatService.saveChat(user.id, chatData);
-      
-      // Update the chat with the real ID from database
-      setChatHistory(prevHistory => 
-        prevHistory.map(chat => 
-          chat.id === newChat.id 
-            ? { ...chat, id: savedChatId, isTemporary: false }
-            : chat
-        )
-      );
-      setActiveChat(savedChatId);
-      
-      return savedChatId;
+      const newChat = await chatService.createChat(user.id, title || `Chat ${chatHistory.length + 1}`);
+      if (newChat) {
+        const chatWithMessages = {
+          ...newChat,
+          messages: []
+        };
+        setChatHistory(prevHistory => [chatWithMessages, ...prevHistory]);
+        setActiveChat(newChat.id);
+        return newChat.id;
+      }
     } catch (error) {
-      console.error('Error saving chat:', error);
-      return newChat.id; // Return temp ID if save fails
+      console.error('Error creating new chat:', error);
     }
+    return null;
   };
 
   const handleFileUpload = async (file) => {
     setActiveFile(file);
 
     try {
-      // New: Process and embed the document with the RAG service
+      // Save file to database
+      let savedFile = null;
+      if (user) {
+        savedFile = await chatService.saveFile(user.id, file);
+      }
+
+      // Process and embed the document with the RAG service
       await aiService.processAndEmbedDocument(file);
     } catch (error) {
       console.error("Error processing document:", error);
-      // Optionally, display an error message to the user
     }
     
     // Check if there's an existing chat without messages
@@ -142,9 +113,14 @@ function Dashboard() {
     
     if (emptyChat) {
       // Update the existing empty chat with the file name
+      const newTitle = `Chat about ${file.name}`;
+      if (user) {
+        await chatService.updateChatTitle(emptyChat.id, newTitle);
+      }
+      
       const updatedHistory = chatHistory.map(chat => 
         chat.id === emptyChat.id 
-          ? { ...chat, title: `Chat about ${file.name}` }
+          ? { ...chat, title: newTitle }
           : chat
       );
       setChatHistory(updatedHistory);
@@ -156,7 +132,14 @@ function Dashboard() {
   };
 
   const updateChatTitle = async (chatId, newTitle) => {
-    // Update local state immediately
+    if (user) {
+      const success = await chatService.updateChatTitle(chatId, newTitle);
+      if (!success) {
+        console.error('Failed to update chat title in database');
+        return;
+      }
+    }
+
     setChatHistory(prevHistory => 
       prevHistory.map(chat => 
         chat.id === chatId 
@@ -164,55 +147,23 @@ function Dashboard() {
           : chat
       )
     );
-
-    // Save to database if it's not a temporary chat
-    const chat = chatHistory.find(c => c.id === chatId);
-    if (chat && !chat.isTemporary && user) {
-      try {
-        await chatService.updateChatTitle(chatId, newTitle);
-      } catch (error) {
-        console.error('Error updating chat title in database:', error);
-      }
-    }
-  };
-
-  const deleteChat = async (chatId) => {
-    try {
-      // If it's not a temporary chat, delete from database
-      const chat = chatHistory.find(c => c.id === chatId);
-      if (chat && !chat.isTemporary && user) {
-        await chatService.deleteChat(chatId);
-      }
-
-      // Remove from local state
-      const newChatHistory = chatHistory.filter(chat => chat.id !== chatId);
-      setChatHistory(newChatHistory);
-
-      // If we're deleting the active chat, switch to another one
-      if (activeChat === chatId) {
-        if (newChatHistory.length > 0) {
-          setActiveChat(newChatHistory[0].id);
-          // Set file if the new active chat has one
-          if (newChatHistory[0].file) {
-            setActiveFile(newChatHistory[0].file);
-          } else {
-            setActiveFile(null);
-          }
-        } else {
-          // No chats left, create a new default one
-          setActiveChat(null);
-          setActiveFile(null);
-          await addToChatHistory('Welcome Chat');
-        }
-      }
-    } catch (error) {
-      console.error('Error deleting chat:', error);
-      alert('Failed to delete chat. Please try again.');
-    }
   };
 
   if (showSplash) {
     return <TextRevealLetters onFinish={() => setShowSplash(false)} />;
+  }
+
+  if (isLoading) {
+    return (
+      <div className="app">
+        <div className="app-header">
+          <Header />
+        </div>
+        <div className="main-row" style={{ justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
+          <div>Loading your chats...</div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -228,15 +179,10 @@ function Dashboard() {
           setActiveChat={setActiveChat}
           activeChat={activeChat}
           updateChatTitle={updateChatTitle}
-          deleteChat={deleteChat}
         />
         <div className="main-content">
           <div className="file-section">
-            <FileViewer 
-              onFileUpload={handleFileUpload} 
-              file={activeFile} 
-              onFileRemove={() => setActiveFile(null)}
-            />
+            <FileViewer onFileUpload={handleFileUpload} file={activeFile} />
           </div>
           <div className="chat-section">
             <Chat 
@@ -245,9 +191,7 @@ function Dashboard() {
               setChatHistory={setChatHistory}
               addToChatHistory={addToChatHistory}
               file={activeFile}
-              onClearFile={() => setActiveFile(null)}
               user={user}
-              isLoadingChats={isLoadingChats}
             />
           </div>
         </div>
