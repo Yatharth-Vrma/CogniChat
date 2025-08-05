@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import '../App.css';
 import Header from './Header';
 import Sidebar from './Sidebar';
@@ -17,6 +17,24 @@ function Dashboard() {
   const [activeChat, setActiveChat] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
+
+  // Create default chat for new users or when loading fails
+  const createDefaultChat = useCallback(async () => {
+    if (!user) return null;
+    
+    try {
+      const newChat = await chatService.createChat(user.id, 'Welcome Chat');
+      if (newChat) {
+        return {
+          ...newChat,
+          messages: []
+        };
+      }
+    } catch (error) {
+      console.error('Error creating default chat:', error);
+    }
+    return null;
+  }, [user]);
 
   // Load user's chats from database when component mounts
   useEffect(() => {
@@ -48,25 +66,7 @@ function Dashboard() {
     };
 
     loadUserChats();
-  },  [user]);
-
-  // Create default chat for new users or when loading fails
-  const createDefaultChat = async () => {
-    if (!user) return null;
-    
-    try {
-      const newChat = await chatService.createChat(user.id, 'Welcome Chat');
-      if (newChat) {
-        return {
-          ...newChat,
-          messages: []
-        };
-      }
-    } catch (error) {
-      console.error('Error creating default chat:', error);
-    }
-    return null;
-  };
+  }, [user, createDefaultChat]);
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
@@ -97,9 +97,8 @@ function Dashboard() {
 
     try {
       // Save file to database
-      let savedFile = null;
       if (user) {
-        savedFile = await chatService.saveFile(user.id, file);
+        await chatService.saveFile(user.id, file);
       }
 
       // Process and embed the document with the RAG service
