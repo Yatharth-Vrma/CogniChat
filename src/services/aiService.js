@@ -147,40 +147,103 @@ class AIService {
     throw new Error("All models are currently rate limited. Please try again in a few minutes.");
   }
 
-  // Step 1: Process, embed, and store the document in Supabase
-  async processAndEmbedDocument(file) {
+  // NEW: Concurrency limiter
+  async limitConcurrency(promises, limit) {
+    const results = [];
+    const executing = [];
+    
+    for (const promise of promises) {
+      const p = Promise.resolve(promise).then(result => {
+        executing.splice(executing.indexOf(p), 1);
+        return result;
+      });
+      
+      results.push(p);
+      
+      if (promises.length >= limit) {
+        executing.push(p);
+        
+        if (executing.length >= limit) {
+          await Promise.race(executing);
+        }
+      }
+    }
+    
+    return Promise.all(results);
+  }
+
+  // NEW: Batch embedding method with progress tracking
+  async batchEmbedChunks(chunks, progressCallback, batchSize = 8, maxConcurrent = 3) {
+    const embeddings = [];
+    const totalBatches = Math.ceil(chunks.length / batchSize);
+    
+    for (let i = 0; i < chunks.length; i += batchSize) {
+      const batch = chunks.slice(i, i + batchSize);
+      const currentBatch = Math.floor(i / batchSize) + 1;
+      
+      console.log(`📦 Processing batch ${currentBatch}/${totalBatches} (${batch.length} chunks)`);
+      
+      // Update progress
+      if (progressCallback) {
+        const progress = ((currentBatch - 1) / totalBatches) * 100;
+        progressCallback(progress);
+      }
+      
+      // Create promises for concurrent embedding
+      const batchPromises = batch.map(async (chunk, index) => {
+        try {
+          const result = await this.embeddingModel.embedContent(chunk);
+          return { index: i + index, embedding: result.embedding.values };
+        } catch (error) {
+          console.error(`Error embedding chunk ${i + index}:`, error);
+          // Retry once with delay
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          const retryResult = await this.embeddingModel.embedContent(chunk);
+          return { index: i + index, embedding: retryResult.embedding.values };
+        }
+      });
+      
+      // Process batch with controlled concurrency
+      const batchResults = await this.limitConcurrency(batchPromises, maxConcurrent);
+      
+      // Add to results in order
+      for (const result of batchResults.sort((a, b) => a.index - b.index)) {
+        embeddings[result.index] = result.embedding;
+      }
+      
+      // Small delay between batches to avoid rate limiting
+      if (currentBatch < totalBatches) {
+        await new Promise(resolve => setTimeout(resolve, 200));
+      }
+    }
+    
+    // Final progress update
+    if (progressCallback) {
+      progressCallback(100);
+    }
+    
+    return embeddings;
+  }
+
+  // OPTIMIZED: Step 1: Process, embed, and store the document in Supabase with batching
+  async processAndEmbedDocument(file, progressCallback) {
     if (!this.isInitialized) throw new Error("AI Service not initialized. Check API key.");
     
-console.log("Starting document processing...");
+    console.log("🚀 Starting optimized document processing...");
     const documentText = await fileProcessingService.extractTextFromFile(file);
     const chunks = fileProcessingService.chunkText(documentText);
     
     // Filter out empty or whitespace-only chunks to prevent API errors.
-       const validChunks = chunks.filter(chunk => chunk && chunk.trim() !== '');
-// ...existing code...
-    console.log(`Extracted ${validChunks.length} valid chunks. Now sanitizing and embedding...`);
+    const validChunks = chunks.filter(chunk => chunk && chunk.trim() !== '');
+    console.log(`📄 Extracted ${validChunks.length} valid chunks. Now sanitizing and embedding...`);
 
     // Aggressively sanitize each chunk to remove any non-printable or non-standard characters.
     // eslint-disable-next-line no-control-regex
     const sanitizedChunks = validChunks.map(chunk => chunk.replace(/[^\x09\x0A\x0D\x20-\x7E]/g, ''));
 
-    // Instead of batch embedding, use individual requests to avoid format issues
-    console.log("Embedding chunks individually...");
-    const embeddings = [];
-    
-    for (let i = 0; i < sanitizedChunks.length; i++) {
-      try {
-        const chunk = sanitizedChunks[i];
-        console.log(`Embedding chunk ${i + 1}/${sanitizedChunks.length}: "${chunk.substring(0, 50)}..."`);
-        
-        const result = await this.embeddingModel.embedContent(chunk);
-        embeddings.push(result.embedding.values);
-      } catch (error) {
-        console.error(`Error embedding chunk ${i}:`, error);
-        console.error(`Problematic chunk content:`, sanitizedChunks[i]);
-        throw new Error(`Failed to embed chunk ${i}: ${error.message}`);
-      }
-    }
+    // NEW: Use batch embedding instead of individual requests
+    console.log("⚡ Embedding chunks in optimized batches...");
+    const embeddings = await this.batchEmbedChunks(sanitizedChunks, progressCallback);
 
     // Prepare data for Supabase using the existing documents table
     const documentsToInsert = sanitizedChunks.map((chunk, i) => ({
@@ -188,7 +251,7 @@ console.log("Starting document processing...");
       embedding: embeddings[i]
     }));
 
-    console.log(`Embedding complete. Storing ${documentsToInsert.length} vectors in Supabase...`);
+    console.log(`💾 Embedding complete. Storing ${documentsToInsert.length} vectors in Supabase...`);
     
     // Clear old documents before adding new ones
     const { error: deleteError } = await supabase.from('documents').delete().neq('id', -1);
@@ -204,7 +267,7 @@ console.log("Starting document processing...");
       throw new Error("Could not save document vectors to the database.");
     }
 
-    console.log(`Document processed and stored successfully.`);
+    console.log(`✅ Document processed and stored successfully in optimized batches!`);
     return {
       chunks: documentsToInsert.length,
       fileSize: file.size,
@@ -235,7 +298,6 @@ console.log("Starting document processing...");
     
     console.log("✅ RAG Context Sent to AI:", relevantChunks ? relevantChunks.map(c => c.content) : 'No chunks found');
     console.log("Number of chunks retrieved:", relevantChunks ? relevantChunks.length : 0);
-// ...existing code...
 
     if (!relevantChunks || relevantChunks.length === 0) {
         // If no relevant chunks are found, use the cascade system
