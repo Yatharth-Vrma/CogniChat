@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './Sidebar.css';
 
-const Sidebar = ({ isOpen, toggleSidebar, chatHistory, setActiveChat, activeChat, updateChatTitle }) => {
+const Sidebar = ({ isOpen, toggleSidebar, chatHistory, setActiveChat, activeChat, updateChatTitle, deleteChat }) => {
   const [editingChatId, setEditingChatId] = useState(null);
   const [editingTitle, setEditingTitle] = useState('');
   const [hoveredChatId, setHoveredChatId] = useState(null);
@@ -11,6 +11,7 @@ const Sidebar = ({ isOpen, toggleSidebar, chatHistory, setActiveChat, activeChat
     setEditingChatId(chat.id);
     setEditingTitle(chat.title);
   };
+
 
   const handleEditSave = (chatId) => {
     if (editingTitle.trim()) {
@@ -68,13 +69,22 @@ const Sidebar = ({ isOpen, toggleSidebar, chatHistory, setActiveChat, activeChat
                 <>
                   <span className="chat-title">{chat.title}</span>
                   {hoveredChatId === chat.id && (
-                    <button
-                      className="chat-menu-btn"
-                      onClick={(e) => handleEditStart(chat, e)}
-                      title="Edit chat name"
-                    >
-                      ⋯
-                    </button>
+                    <><button
+                        className="chat-menu-btn"
+                        onClick={(e) => handleEditStart(chat, e)}
+                        title="Edit chat name"
+                      >
+                        ⋯
+                      </button><button
+className="chat-delete-btn"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteChat(chat.id);
+                        }}
+                        title="Delete chat"
+                      >
+                          ⤫
+                        </button></>
                   )}
                 </>
               )}

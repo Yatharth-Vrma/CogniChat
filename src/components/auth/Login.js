@@ -5,10 +5,21 @@ import Silk from '../ui/Silk'
 import './Auth.css'
 
 const Login = () => {
-  const [email, setEmail] = useState('')
+  const [email, setEmail] = useState(() => {
+    // Auto-load saved email
+    return localStorage.getItem('cognichat-email') || ''
+  })
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  
+  // Auto-save email when typing
+  const handleEmailChange = (e) => {
+    const value = e.target.value
+    setEmail(value)
+    localStorage.setItem('cognichat-email', value)
+  }
+  
   const { signIn } = useAuth()
   const navigate = useNavigate()
 
@@ -63,7 +74,7 @@ const Login = () => {
                 id="email"
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={handleEmailChange}
                 className="silk-auth-input"
                 placeholder="Enter your email"
                 required

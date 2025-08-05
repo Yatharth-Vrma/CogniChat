@@ -20,7 +20,7 @@ export default function TextRevealLetters({ onFinish }) {
     <div className="splash-text-container">
       <TextReveal
         className={cn(
-          "bg-primary from-foreground to-primary via-rose-200 bg-clip-text text-6xl font-bold text-transparent dark:bg-gradient-to-b"
+          "bg-primary from-foreground via-gray-200 bg-clip-text text-6xl font-bold text-transparent dark:bg-gradient-to-b"
         )}
         from="bottom"
         split="letter"

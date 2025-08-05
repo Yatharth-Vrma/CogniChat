@@ -129,6 +129,23 @@ function Dashboard() {
       addToChatHistory(`Chat about ${file.name}`);
     }
   };
+    
+  async function deleteChat(chatId) {
+    try {
+      if (user) {
+        await chatService.deleteChat(chatId);
+      }
+
+      setChatHistory(prevHistory => prevHistory.filter(chat => chat.id !== chatId));
+
+      if (activeChat === chatId) {
+        const remainingChats = chatHistory.filter(chat => chat.id !== chatId);
+        setActiveChat(remainingChats.length > 0 ? remainingChats[0].id : null);
+      }
+    } catch (error) {
+      console.error('Error deleting chat:', error);
+    }
+  }
 
   const updateChatTitle = async (chatId, newTitle) => {
     if (user) {
@@ -178,6 +195,8 @@ function Dashboard() {
           setActiveChat={setActiveChat}
           activeChat={activeChat}
           updateChatTitle={updateChatTitle}
+          deleteChat={deleteChat}
+
         />
         <div className="main-content">
           <div className="file-section">
