@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
+import Silk from '../ui/Silk'
 import './Auth.css'
 
 const Login = () => {
@@ -27,66 +28,84 @@ const Login = () => {
   }
 
   return (
-    <div className="auth-container">
-      <div className="auth-card">
-        <div className="auth-header">
-          <h1 className="auth-title">Welcome to CogniChat</h1>
-          <p className="auth-subtitle">Sign in to your account</p>
-        </div>
+    <div className="silk-auth-container">
+      {/* Silk Background */}
+      <div className="silk-background">
+        <Silk
+          speed={3}
+          scale={1.5}
+          color="#313235ff"
+          noiseIntensity={1.2}
+          rotation={0.1}
+        />
+      </div>
+      
+      {/* Login Content */}
+      <div className="silk-auth-content">
+        <div className="silk-auth-card transparent">
+          <div className="silk-auth-header">
+            <h1 className="silk-auth-title">Welcome Back</h1>
+            <p className="silk-auth-subtitle">Sign in to your CogniChat account</p>
+          </div>
 
-        <form onSubmit={handleSubmit} className="auth-form">
-          {error && (
-            <div className="auth-error">
-              {error}
+          <form onSubmit={handleSubmit} className="silk-auth-form">
+            {error && (
+              <div className="silk-auth-error">
+                {error}
+              </div>
+            )}
+
+            <div className="silk-auth-field">
+              <label htmlFor="email" className="silk-auth-label">
+                Email Address
+              </label>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="silk-auth-input"
+                placeholder="Enter your email"
+                required
+              />
             </div>
-          )}
 
-          <div className="auth-field">
-            <label htmlFor="email" className="auth-label">
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="auth-input"
-              placeholder="Enter your email"
-              required
-            />
+            <div className="silk-auth-field">
+              <label htmlFor="password" className="silk-auth-label">
+                Password
+              </label>
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="silk-auth-input"
+                placeholder="Enter your password"
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="silk-auth-button"
+            >
+              {loading ? (
+                <div className="silk-loading-spinner"></div>
+              ) : (
+                'Sign In'
+              )}
+            </button>
+          </form>
+
+          <div className="silk-auth-footer">
+            <p className="silk-auth-link-text">
+              Don't have an account?{' '}
+              <Link to="/signup" className="silk-auth-link">
+                Create account
+              </Link>
+            </p>
           </div>
-
-          <div className="auth-field">
-            <label htmlFor="password" className="auth-label">
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="auth-input"
-              placeholder="Enter your password"
-              required
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="auth-button"
-          >
-            {loading ? 'Signing in...' : 'Sign In'}
-          </button>
-        </form>
-
-        <div className="auth-footer">
-          <p className="auth-link-text">
-            Don't have an account?{' '}
-            <Link to="/signup" className="auth-link">
-              Sign up
-            </Link>
-          </p>
         </div>
       </div>
     </div>

@@ -1,0 +1,50 @@
+.header {
+  background: rgb(var(--background));
+  color: rgb(var(--foreground));
+  border-bottom: 1px solid rgb(var(--border));
+  transition: all 0.3s ease;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1rem;
+  height: 4rem;
+}
+
+.header-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.header-nav button {
+  color: rgb(var(--muted-foreground));
+  transition: color 0.2s ease;
+}
+
+.header-nav button:hover {
+  color: rgb(var(--foreground));
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.header-actions button {
+  background: transparent;
+  border: none;
+  color: rgb(var(--muted-foreground));
+  cursor: pointer;
+  padding: 0.75rem;
+  border-radius: 0.375rem;
+  transition: all 0.2s ease;
+}
+
+.header-actions button:hover {
+  background: rgb(var(--accent));
+  color: rgb(var(--foreground));
+}

@@ -48,7 +48,7 @@ function Dashboard() {
     };
 
     loadUserChats();
-  }, [user]);
+  },  [user]);
 
   // Create default chat for new users or when loading fails
   const createDefaultChat = async () => {
