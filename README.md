@@ -185,7 +185,7 @@ Open [http://localhost:3000](http://localhost:3000) to view the app! 🎉
 
 ## ScreenShots
 <img width="1470" height="956" alt="image" src="https://github.com/user-attachments/assets/826eb728-b1c3-4ce1-8dcc-38745ffca0f3" />
-<img width="1470" height="956" alt="image" src="https://github.com/user-attachments/assets/b1f226e0-597c-49c8-8f15-ddcac206868a" />
+<img width="2940" height="1912" alt="image" src="https://github.com/user-attachments/assets/ae645423-e4f0-4c05-a52f-c03198d45cad" />
 <img width="1470" height="956" alt="image" src="https://github.com/user-attachments/assets/849f7f81-a729-46af-80ce-51f84e4f3bcb" />
 
 
